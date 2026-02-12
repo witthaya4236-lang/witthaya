@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>หมาล่าลิ้นชา & น้ำชง - สั่งอาหารแบบละเอียด</title>
+    <title>หมาล่าลิ้นชา & น้ำชง - ระบบจัดการร้าน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -35,7 +35,6 @@
             100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
         }
         
-        /* Custom Radio Button for Spice */
         .spice-radio:checked + label {
             background-color: #fef2f2;
             border-color: #ef4444;
@@ -45,12 +44,15 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-bold">
 
-    <!-- Offline Warning Banner -->
-    <div id="local-warning" class="hidden bg-yellow-500 text-white text-center py-2 text-xs font-bold no-print z-50 relative px-4">
-        ⚠️ โหมดจำลอง (Offline): หากสแกนมือถือไม่ติด ให้เปลี่ยน "แก้ไขลิงก์เว็บ" ในหน้าหลังบ้าน เป็น IP ของเครื่องคอมฯ (เช่น 192.168.x.x)
+    <!-- Database Warning Banner -->
+    <div id="db-warning" class="hidden bg-red-600 text-white text-center py-3 text-sm font-bold no-print z-50 relative px-4 shadow-md">
+        ⚠️ กำลังเชื่อมต่อ Firebase...
+    </div>
+    <div id="local-warning" class="hidden bg-yellow-500 text-white text-center py-2 text-xs font-bold no-print z-50 relative px-4 shadow-md">
+        ⚠️ โหมดจำลอง (Offline): ข้อมูลจะอยู่แค่ในเครื่องนี้
     </div>
 
-    <!-- Navigation Tab (เพิ่ม id="main-nav" เพื่อให้สั่งซ่อนได้) -->
+    <!-- Navigation Tab -->
     <div id="main-nav" class="fixed top-0 left-0 right-0 z-[60] flex justify-center p-2 pointer-events-none no-print mt-2 transition-opacity duration-300">
         <div class="bg-black/80 backdrop-blur-md text-white rounded-full p-1 flex gap-1 pointer-events-auto shadow-xl border border-white/20">
             <button onclick="switchView('customer')" id="tab-customer" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-red-600">
@@ -63,7 +65,11 @@
     </div>
 
     <!-- CUSTOMER VIEW -->
-    <div id="customer-view" class="pt-10 no-print">
+    <div id="customer-view" class="pt-10 no-print relative">
+        <button onclick="exitCustomerMode()" id="exit-customer-btn" class="fixed bottom-4 left-4 z-30 p-3 bg-gray-200/50 text-gray-400 rounded-full hover:bg-red-600 hover:text-white transition-all hidden">
+            <i data-lucide="key" class="w-4 h-4"></i>
+        </button>
+
         <header class="bg-red-600 text-white p-4 sticky top-10 z-40 shadow-lg">
             <div class="max-w-md mx-auto flex justify-between items-center">
                 <div>
@@ -80,7 +86,6 @@
         </header>
 
         <main class="max-w-md mx-auto pb-20">
-            <!-- Promotion Banner -->
             <div class="p-4">
                 <div class="bg-gradient-to-r from-red-600 to-orange-500 rounded-3xl p-6 text-white shadow-md relative overflow-hidden">
                     <div class="relative z-10">
@@ -91,7 +96,6 @@
                 </div>
             </div>
 
-            <!-- Category Selector -->
             <div class="flex gap-2 px-4 mb-4 sticky top-[100px] bg-gray-50/95 backdrop-blur py-2 z-30 font-bold">
                 <button onclick="filterMenu('mala')" id="btn-mala" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-600 text-white shadow-sm transition-all active:scale-95">
                     <i data-lucide="flame" class="w-4 h-4"></i> หมาล่า
@@ -213,21 +217,28 @@
                 <h2 class="text-2xl font-black text-gray-800 mb-8 flex items-center justify-center gap-2"><i data-lucide="qr-code" class="text-red-600"></i> พิมพ์ QR Code แยกโต๊ะ</h2>
                 <div class="max-w-md mx-auto mb-10 space-y-4">
                     <div>
-                        <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">แก้ไขลิงก์เว็บ (Base URL)</label>
-                        <input type="text" id="qr-base-url" placeholder="เช่น http://192.168.1.42:5500/index.html" oninput="updateAdminQR()" class="w-full px-6 py-4 rounded-3xl border-4 border-blue-50 outline-none focus:border-blue-500 text-center text-sm font-bold text-blue-600 bg-blue-50/50">
-                        <p class="text-[10px] text-gray-400 mt-2">* ใส่ IP ของเครื่องคอมฯ เพื่อให้มือถือสแกนติด</p>
+                        <label class="text-[10px] font-black uppercase text-blue-500 mb-2 block flex items-center justify-center gap-1"><i data-lucide="globe" class="w-3 h-3"></i> แก้ไขลิงก์เว็บ (Base URL)</label>
+                        <!-- AUTO-FILL INPUT VALUE with persistence logic -->
+                        <input type="text" id="qr-base-url" placeholder="จะแสดง URL อัตโนมัติ..." oninput="updateAdminQR()" class="w-full px-6 py-4 rounded-2xl border-2 border-white outline-none focus:border-blue-500 text-center text-sm font-bold text-blue-700 bg-white shadow-sm">
+                        <div id="localhost-warning" class="hidden mt-2 flex items-center justify-center gap-1 text-[10px] text-red-500 font-bold bg-red-50 p-1 rounded-lg">
+                            <i data-lucide="alert-triangle" class="w-3 h-3"></i> ลิงก์นี้อาจสแกนด้วยมือถือไม่ได้ (Localhost)
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">* เปลี่ยนเป็น URL ของ Vercel หรือ IP เครื่อง</p>
                     </div>
                     <div>
                         <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">เลขโต๊ะ</label>
                         <input type="text" id="qr-table-input" value="01" oninput="updateAdminQR()" class="w-full px-6 py-4 rounded-3xl border-4 border-gray-50 outline-none focus:border-red-500 text-center text-4xl font-black">
                     </div>
                 </div>
-                <div class="bg-red-50 p-10 rounded-[60px] inline-block mb-10 border-8 border-white shadow-xl"><img id="qr-image" src="" alt="QR" class="w-56 h-56 mx-auto shadow-sm p-4 bg-white rounded-3xl"></div>
+                <div class="bg-white p-6 rounded-[40px] inline-block mb-10 border-4 border-gray-100 shadow-xl relative group">
+                    <img id="qr-image" src="" alt="QR" class="w-56 h-56 mx-auto rounded-xl">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[30px] pointer-events-none"></div>
+                </div>
                 
                 <!-- Link Preview -->
                 <div class="mb-8 p-4 bg-gray-50 rounded-2xl text-center">
                     <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">ลิงก์ที่จะอยู่ใน QR Code</p>
-                    <a id="qr-link-text" href="#" target="_blank" class="text-blue-600 text-xs font-bold break-all hover:underline">...</a>
+                    <a id="qr-link-text" href="#" target="_blank" class="text-blue-600 text-xs font-bold break-all hover:underline hover:text-blue-800 transition-colors">...</a>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-2 justify-center">
@@ -249,7 +260,7 @@
     </div>
 
     <!-- Success Modal -->
-    <div id="success-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 hidden no-print"><div class="absolute inset-0 bg-black/70 backdrop-blur-md"></div><div class="bg-white rounded-[60px] p-12 text-center relative z-10 w-full max-w-xs scale-90 opacity-0 transition-all duration-500" id="success-content"><div class="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><i data-lucide="check" class="w-12 h-12"></i></div><h4 class="text-3xl font-black mb-1 text-gray-800">ส่งออเดอร์แล้ว!</h4><div class="bg-red-600 text-white rounded-3xl py-4 my-6 shadow-lg"><p class="text-xs font-bold uppercase opacity-80 mb-1">หมายเลขคิวของคุณ</p><p id="customer-queue-no" class="text-6xl font-black">#--</p></div><p class="text-gray-400 text-sm font-bold mb-8 italic">เชฟกำลังเริ่มลงมือทำจ้า<br>รอฟังเลขคิวได้เลย!</p><button onclick="closeSuccess()" class="w-full py-5 bg-gray-900 text-white rounded-[32px] font-black text-xl active:scale-95 transition-all">ตกลง</button></div></div>
+    <div id="success-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 hidden no-print"><div class="absolute inset-0 bg-black/70 backdrop-blur-md"></div><div class="bg-white rounded-[60px] p-12 text-center relative z-10 w-full max-w-xs scale-90 opacity-0 transition-all duration-500" id="success-content"><div class="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><i data-lucide="check" class="w-12 h-12"></i></div><h4 class="text-3xl font-black mb-1 text-gray-800">ส่งออเดอร์แล้ว!</h4><div class="bg-red-600 text-white rounded-3xl py-4 my-6 shadow-lg"><p class="text-xs font-bold uppercase opacity-80 mb-1">หมายเลขคิวของคุณ</p><p id="customer-queue-no" class="text-6xl font-black">#--</p></div><p class="text-gray-400 text-sm font-bold mb-8 italic" id="success-note-text">เชฟกำลังเริ่มลงมือทำจ้า<br>รอฟังเลขคิวได้เลย!</p><button onclick="closeSuccess()" class="w-full py-5 bg-gray-900 text-white rounded-[32px] font-black text-xl active:scale-95 transition-all">ตกลง</button></div></div>
 
     <!-- Cart Drawer -->
     <div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity no-print"></div>
@@ -268,17 +279,41 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, addDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ==========================================
+        //  ตั้งค่าการเชื่อมต่อฐานข้อมูล (Database Config)
+        //  ⚠️ สำคัญ: ใส่รหัส Firebase ที่นี่เพื่อให้ใช้งานข้ามเครื่องได้
+        // ==========================================
+        const userFirebaseConfig = {
+            apiKey: "AIzaSyBeZCptmHAfSF_CGpLKCPXatp0hvlVtYo8",
+            authDomain: "malashop-45181.firebaseapp.com",
+            projectId: "malashop-45181",
+            storageBucket: "malashop-45181.firebasestorage.app",
+            messagingSenderId: "1062060224698",
+            appId: "1:1062060224698:web:badeadc3c963ca33861283",
+            measurementId: "G-E19PFFEEWH"
+        };
+
+        // Setup Firebase safely
         let app, auth, db;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         try {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                app = initializeApp(firebaseConfig);
+            let config;
+            if (userFirebaseConfig.apiKey) {
+                config = userFirebaseConfig;
+            } else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                config = JSON.parse(__firebase_config);
+            }
+
+            if (config) {
+                app = initializeApp(config);
                 auth = getAuth(app);
                 db = getFirestore(app);
+                console.log("Database Connected!");
             }
-        } catch (error) { console.warn("Offline Mode"); }
+        } catch (error) { 
+            console.warn("Offline Mode: ", error); 
+        }
 
         let user = null;
         let menuItems = [];
@@ -296,10 +331,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         let tableNo = urlParams.get('table') || "หน้าเคาน์เตอร์";
         
-        // Hide nav bar if table param exists (Customer Mode)
         const tableParam = urlParams.get('table');
         if (tableParam) {
             document.getElementById('main-nav').classList.add('hidden');
+            document.getElementById('exit-customer-btn').classList.remove('hidden');
         }
 
         document.getElementById('display-table-no').innerText = `โต๊ะที่ ${tableNo}`;
@@ -317,31 +352,54 @@
         window.testSound = () => playNotificationSound();
 
         // ---------------- INITIALIZATION ----------------
+        const runInit = () => {
+            renderMenu(); 
+            renderAdminMenu(); 
+            
+            const savedOrders = localStorage.getItem('offline_orders');
+            if (savedOrders) {
+                allOrders = JSON.parse(savedOrders);
+                renderAdminOrders(allOrders);
+                updateAccountingSummary();
+            }
+            
+            // --- AUTO DETECT URL ---
+            const baseUrlInput = document.getElementById('qr-base-url');
+            if(baseUrlInput) {
+                const savedBaseUrl = localStorage.getItem('qr_base_url');
+                
+                // Prioritize Saved URL, then Vercel/Current URL, then default placeholder
+                if (savedBaseUrl) {
+                    baseUrlInput.value = savedBaseUrl;
+                } else {
+                    baseUrlInput.value = window.location.href.split('?')[0]; 
+                }
+            }
+            
+            window.updateAdminQR(); 
+            if(window.lucide) lucide.createIcons();
+        };
+
         if (!db) {
-            document.getElementById('local-warning').classList.remove('hidden');
+            document.getElementById('db-warning').classList.remove('hidden');
+            
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'offline_orders') {
+                    allOrders = JSON.parse(e.newValue || '[]');
+                    renderAdminOrders(allOrders);
+                    updateAccountingSummary();
+                    playNotificationSound();
+                }
+            });
+
             menuItems = [
                 { id: '1', cat: 'mala', name: 'สันคอหมู', price: 15, img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400', desc: 'หมูนุ่ม' },
                 { id: '2', cat: 'mala', name: 'เบคอนพันเห็ด', price: 20, img: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400', desc: 'อร่อย' },
                 { id: '3', cat: 'drinks', name: 'ชาไทย', price: 45, img: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400', desc: 'หอม' }
             ];
-            setTimeout(() => { 
-                renderMenu(); 
-                renderAdminMenu(); 
-                renderAdminOrders([]); 
-                updateAccountingSummary(); 
-                
-                // --- แก้ไขตรงนี้: บังคับให้ใช้ IP 192.168.1.42 เป็นค่าเริ่มต้น ---
-                const defaultIP = "http://192.168.1.42:5500/index.html";
-                // ถ้าเปิดใน localhost ให้ใช้ IP นี้เลย
-                if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
-                    if(document.getElementById('qr-base-url')) document.getElementById('qr-base-url').value = defaultIP;
-                } else {
-                    if(document.getElementById('qr-base-url')) document.getElementById('qr-base-url').value = window.location.href.split('?')[0];
-                }
-                
-                window.updateAdminQR(); 
-                if(window.lucide) lucide.createIcons(); 
-            }, 500); 
+            
+            setTimeout(runInit, 100);
+            
         } else {
             const initAuth = async () => { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); else await signInAnonymously(auth); };
             initAuth();
@@ -351,16 +409,7 @@
                     setupRealtimeMenu(); 
                     setupRealtimeOrders(); 
                     setupRealtimeAccounting();
-                    
-                    // --- แก้ไขตรงนี้เช่นกันสำหรับโหมดออนไลน์ ---
-                    const defaultIP = "http://192.168.1.42:5500/index.html";
-                    if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
-                        if(document.getElementById('qr-base-url')) document.getElementById('qr-base-url').value = defaultIP;
-                    } else {
-                        if(document.getElementById('qr-base-url')) document.getElementById('qr-base-url').value = window.location.href.split('?')[0];
-                    }
-                    
-                    window.updateAdminQR(); 
+                    runInit(); 
                 } 
             });
         }
@@ -526,8 +575,15 @@
                 status: 'pending', timestamp: Date.now()
             };
             try {
-                if (db) await addDoc(ordersCollection, orderData);
-                else { allOrders.push({ id: Date.now().toString(), ...orderData }); renderAdminOrders(allOrders); }
+                if (db) {
+                    await addDoc(ordersCollection, orderData);
+                } else {
+                    // OFFLINE SYNC LOGIC
+                    allOrders.push({ id: Date.now().toString(), ...orderData });
+                    localStorage.setItem('offline_orders', JSON.stringify(allOrders)); // Sync to other tabs
+                    renderAdminOrders(allOrders);
+                    document.getElementById('success-note-text').innerHTML = "โหมดจำลอง: ข้อมูลจะอยู่แค่ในเครื่องนี้<br>เปิดหน้าหลังบ้านในเครื่องเดียวกันเพื่อดูออเดอร์";
+                }
                 document.getElementById('customer-queue-no').innerText = `#${queueNo}`;
                 showSuccess(); cart = []; updateBadge();
             } catch (err) { alert("คิวขัดข้อง ลองใหม่นะ"); } finally { btn.innerText = "สั่งตอนนี้เลย!"; btn.disabled = false; }
@@ -536,6 +592,7 @@
         window.updateOrderStatus = async (id, newStatus) => {
             if (!db) {
                 const order = allOrders.find(o => o.id === id); if (order) order.status = newStatus;
+                localStorage.setItem('offline_orders', JSON.stringify(allOrders)); // Sync Update
                 renderAdminOrders(allOrders); updateAccountingSummary(); return;
             }
             await updateDoc(doc(ordersCollection, id), { status: newStatus });
@@ -556,8 +613,29 @@
         window.switchView = (v) => {
             const cv = document.getElementById('customer-view'); const av = document.getElementById('admin-view');
             const tc = document.getElementById('tab-customer'); const ta = document.getElementById('tab-admin');
-            if (v === 'admin') { cv.classList.add('hidden'); av.classList.remove('hidden'); ta.classList.add('bg-red-600'); tc.classList.remove('bg-red-600'); }
-            else { cv.classList.remove('hidden'); av.classList.add('hidden'); tc.classList.add('bg-red-600'); ta.classList.remove('bg-red-600'); }
+            
+            // Show exit button only in customer view
+            const exitBtn = document.getElementById('exit-customer-btn');
+            
+            if (v === 'admin') { 
+                cv.classList.add('hidden'); av.classList.remove('hidden'); ta.classList.add('bg-red-600'); tc.classList.remove('bg-red-600'); 
+                exitBtn.classList.add('hidden');
+            }
+            else { 
+                cv.classList.remove('hidden'); av.classList.add('hidden'); tc.classList.add('bg-red-600'); ta.classList.remove('bg-red-600'); 
+                exitBtn.classList.remove('hidden');
+            }
+        };
+        
+        window.exitCustomerMode = () => {
+            // Restore Nav
+            document.getElementById('main-nav').classList.remove('hidden');
+            // Switch to Admin
+            switchView('admin');
+            // Reset URL params (Softly)
+            const newUrl = window.location.href.split('?')[0];
+            window.history.pushState({}, '', newUrl);
+            document.getElementById('display-table-no').innerText = "โต๊ะที่ --";
         };
 
         window.handleImageUpload = (input) => {
@@ -639,32 +717,19 @@
 
         window.updateQty = (index, delta) => { const item = cart[index]; if (item) { item.qty += delta; if (item.qty <= 0) cart.splice(index, 1); } renderCart(); updateBadge(); };
 
-        function renderAdminMenu() {
-            const list = document.getElementById('admin-menu-list');
-            list.innerHTML = menuItems.map(item => `<div class="bg-white p-5 rounded-[32px] flex gap-4 shadow-sm border border-gray-50 items-center"><img src="${item.img}" class="w-16 h-16 rounded-2xl object-cover bg-gray-100"><div class="flex-1"><h4 class="font-black text-gray-700 leading-tight">${item.name}</h4><span class="text-red-600 font-black">฿${item.price}</span></div><div class="flex gap-1"><button onclick="window.editItem('${item.id}')" class="p-3 bg-blue-50 text-blue-600 rounded-xl active:scale-90 transition-all"><i data-lucide="edit-2" class="w-4 h-4"></i></button><button onclick="window.deleteItem('${item.id}')" class="p-3 bg-red-50 text-red-600 rounded-xl active:scale-90 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join(''); 
-            if(window.lucide) lucide.createIcons();
-        }
-
-        window.editItem = (id) => { const item = menuItems.find(i => i.id === id); if (item) { document.getElementById('edit-id').value = item.id; document.getElementById('menu-name').value = item.name; document.getElementById('menu-price').value = item.price; document.getElementById('menu-cat').value = item.cat; const preview = document.getElementById('image-preview'); const placeholder = document.getElementById('upload-placeholder'); preview.src = item.img; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); document.getElementById('menu-img-data').value = ""; document.getElementById('form-submit').innerText = "อัปเดตรายการ"; switchAdminTab('menu'); } };
-        window.resetForm = () => { document.getElementById('menu-form').reset(); document.getElementById('edit-id').value = ""; document.getElementById('menu-img-data').value = ""; document.getElementById('image-preview').classList.add('hidden'); document.getElementById('upload-placeholder').classList.remove('hidden'); document.getElementById('form-submit').innerText = "บันทึก"; };
-        document.getElementById('menu-form').onsubmit = async (e) => { 
-            e.preventDefault(); 
-            if (!db) { alert("โหมดออฟไลน์: ไม่สามารถบันทึกเมนูเข้าฐานข้อมูลจริงได้"); return; }
-            const id = document.getElementById('edit-id').value; const img = document.getElementById('menu-img-data').value; if (!img && !id) { alert("ลืมใส่รูปจ้า!"); return; } const data = { name: document.getElementById('menu-name').value, price: parseInt(document.getElementById('menu-price').value), cat: document.getElementById('menu-cat').value, desc: '' }; if (img) data.img = img; try { id ? await setDoc(doc(menuCollection, id), data, { merge: true }) : await addDoc(menuCollection, data); resetForm(); } catch (err) { alert("บันทึกไม่สำเร็จจ้า"); } 
-        };
-        window.deleteItem = async (id) => { 
-            if (!db) { alert("โหมดออฟไลน์: ไม่สามารถลบข้อมูลจริงได้"); return; }
-            if (confirm("จะลบเมนูนี้จริงๆ หรือ?")) await deleteDoc(doc(menuCollection, id)); 
-        };
-
         // --- UPDATE ADMIN QR CODE (ALLOW CUSTOM URL) ---
         window.updateAdminQR = () => {
-            const tableVal = document.getElementById('qr-table-input').value || "01";
+            const tableInput = document.getElementById('qr-table-input');
+            const baseUrlInput = document.getElementById('qr-base-url');
+            
+            if (!tableInput) return; // Safety check
+
+            const tableVal = tableInput.value || "01";
+            
             // Get user provided base URL or use current
-            let baseUrl = document.getElementById('qr-base-url') ? document.getElementById('qr-base-url').value : "";
+            let baseUrl = baseUrlInput ? baseUrlInput.value : "";
             
             if (!baseUrl) {
-                // If input empty, fallback to current origin
                 baseUrl = window.location.href.split('?')[0];
             }
             
@@ -674,12 +739,36 @@
             // Handle if user didn't put http
             if(!baseUrl.startsWith('http')) baseUrl = 'http://' + baseUrl;
 
-            const targetUrl = `${baseUrl}?table=${encodeURIComponent(tableVal)}`;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(targetUrl)}`;
+            // Check if localhost
+            if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost')) {
+                document.getElementById('localhost-warning').classList.remove('hidden');
+            } else {
+                document.getElementById('localhost-warning').classList.add('hidden');
+            }
             
-            document.getElementById('qr-image').src = qrUrl;
-            document.getElementById('print-qr').src = qrUrl;
-            document.getElementById('print-table-no').innerText = `โต๊ะที่ ${tableVal}`;
+            // Save preference
+            localStorage.setItem('qr_base_url', baseUrl);
+
+            const targetUrl = `${baseUrl}?table=${encodeURIComponent(tableVal)}`;
+            
+            // USE QUICKCHART for robustness
+            const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(targetUrl)}&size=500&margin=4`;
+            
+            const qrImg = document.getElementById('qr-image');
+            const printQrImg = document.getElementById('print-qr');
+            
+            if (qrImg) {
+                qrImg.src = qrUrl;
+                // Add error handling
+                qrImg.onerror = function() {
+                    this.alt = "ไม่สามารถโหลด QR Code ได้ (ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต)";
+                    this.style.border = "2px dashed red";
+                };
+            }
+            if (printQrImg) printQrImg.src = qrUrl;
+            
+            const printTableNo = document.getElementById('print-table-no');
+            if (printTableNo) printTableNo.innerText = `โต๊ะที่ ${tableVal}`;
             
             // Update link preview
             const linkText = document.getElementById('qr-link-text');
@@ -698,20 +787,17 @@
             
             // ซ่อน Nav bar เสมือนว่าเป็นลูกค้า
             document.getElementById('main-nav').classList.add('hidden');
+            // Show exit button
+            document.getElementById('exit-customer-btn').classList.remove('hidden');
 
-            // สลับไปหน้าลูกค้า
             switchView('customer');
             
-            // (Optional) เปลี่ยน URL แบบไม่รีโหลดหน้า เพื่อความสมจริง
             try {
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('table', tableVal);
                 window.history.pushState({}, '', newUrl);
-            } catch (e) {
-                // ถ้าทำไม่ได้ (เช่นติดสิทธิ์) ก็ปล่อยผ่าน
-            }
+            } catch (e) { }
             
-            // เลื่อนหน้าจอขึ้นบนสุด
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
