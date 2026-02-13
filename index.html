@@ -65,7 +65,7 @@
 
     <!-- Offline Warning Banner -->
     <div id="local-warning" class="hidden bg-yellow-500 text-white text-center py-2 text-xs font-bold no-print z-50 relative px-4">
-        ⚠️ โหมดจำลอง (Offline): ข้อมูลจะหายไปเมื่อรีเฟรช | <span id="current-url-display"></span>
+        ⚠️ โหมดจำลอง (Sync): ข้อมูลจะเชื่อมต่อกันในเบราว์เซอร์นี้ | <span id="current-url-display"></span>
     </div>
 
     <!-- Navigation Tab -->
@@ -433,6 +433,7 @@
 
         let app, auth, db;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const LOCAL_STORAGE_KEY = 'mala_shop_orders';
 
         // --- Firebase Init ---
         try {
@@ -498,6 +499,12 @@
                 document.getElementById('local-warning').classList.remove('hidden');
                 document.getElementById('current-url-display').innerText = window.location.host;
                 
+                // Load from LocalStorage
+                const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (saved) {
+                    allOrders = JSON.parse(saved);
+                }
+
                 // Seed Fake Data
                 menuItems = [
                     { id: '1', cat: 'mala', name: 'สันคอหมู', price: 15, img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400', desc: 'หมูนุ่ม' },
@@ -507,10 +514,28 @@
                     { id: '5', cat: 'drinks', name: 'นมชมพู', price: 40, img: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400', desc: 'หวานมัน' }
                 ];
                 renderMenu(); 
-                renderAdminMenu(); 
-                renderAdminOrders([]); 
+                renderAdminOrders(allOrders); 
                 updateAccountingSummary();
                 updateQRPreview(); // Init QR
+
+                // Listen for changes from other tabs (Customer -> Admin Sync)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === LOCAL_STORAGE_KEY) {
+                        const newOrders = JSON.parse(e.newValue || '[]');
+                        
+                        // Check for new pending orders to play sound
+                        const oldPending = allOrders.filter(o => o.status === 'pending').length;
+                        const newPending = newOrders.filter(o => o.status === 'pending').length;
+                        
+                        if (newPending > oldPending) {
+                            playNotificationSound();
+                        }
+                        
+                        allOrders = newOrders;
+                        renderAdminOrders(allOrders);
+                        updateAccountingSummary();
+                    }
+                });
                 
             } else {
                 // Online Mode
@@ -884,7 +909,12 @@
             
             try {
                 if (db) await addDoc(ordersCollection, orderData);
-                else { allOrders.push({ id: Date.now().toString(), ...orderData }); renderAdminOrders(allOrders); }
+                else { 
+                    // Offline: Add to array AND LocalStorage
+                    allOrders.push({ id: Date.now().toString(), ...orderData }); 
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allOrders));
+                    renderAdminOrders(allOrders); 
+                }
                 
                 document.getElementById('customer-queue-no').innerText = `#${queueNo}`;
                 showSuccess(); 
@@ -962,8 +992,14 @@
         window.updateOrderStatus = async (id, newStatus) => {
             if (!db) {
                 const order = allOrders.find(o => o.id === id); 
-                if (order) order.status = newStatus;
-                renderAdminOrders(allOrders); updateAccountingSummary(); return;
+                if (order) {
+                    order.status = newStatus;
+                    // Save back to LS
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allOrders));
+                    renderAdminOrders(allOrders); 
+                    updateAccountingSummary(); 
+                }
+                return;
             }
             await updateDoc(doc(ordersCollection, id), { status: newStatus });
         };
