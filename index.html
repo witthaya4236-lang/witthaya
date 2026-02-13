@@ -108,8 +108,9 @@
 
     <!-- SELECTION MODAL -->
     <div id="selection-modal" class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 hidden no-print">
+        <!-- Overlay -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="window.closeSelectionModal()"></div>
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm relative z-10 modal-animate max-h-[85vh] flex flex-col" id="selection-content">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm relative z-10 modal-animate max-h-[85vh] flex flex-col shadow-2xl" id="selection-content">
             <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-2 sm:hidden"></div>
             <div class="p-5 overflow-y-auto no-scrollbar">
                 <div class="flex gap-4 mb-4">
@@ -238,7 +239,7 @@
         </div>
     </div>
 
-    <!-- Print Template (ซ่อนจากหน้าเว็บปกติด้วย CSS ด้านบน) -->
+    <!-- Print Template -->
     <div class="print-only p-10 text-center bg-white min-h-screen flex flex-col items-center justify-center">
         <div class="border-[12px] border-red-600 rounded-[80px] p-16 inline-block bg-white shadow-2xl">
             <div class="bg-white p-8 inline-block border-2 border-gray-100 rounded-[60px] shadow-sm mb-12">
@@ -325,7 +326,6 @@
         const runInit = async () => {
             try {
                 await signInAnonymously(auth);
-                // ตั้งค่าหน้าเริ่มต้นให้เป็น Customer View ทันที
                 window.switchView('customer');
                 setTimeout(() => {
                     document.getElementById('app-loading').classList.add('hidden');
@@ -380,7 +380,6 @@
                 admin.classList.add('hidden');
                 tabC.classList.add('bg-red-600');
                 tabA.classList.remove('bg-red-600', 'text-white');
-                // แสดงปุ่มออกถ้ามี parameter โต๊ะ
                 const urlP = new URLSearchParams(window.location.search);
                 if(urlP.get('table')) exitBtn.classList.remove('hidden');
             }
@@ -401,7 +400,7 @@
             const container = document.getElementById('menu-container');
             if(!container) return;
             const items = menuItems.filter(i => i.cat === currentFilter);
-            if(items.length === 0) { container.innerHTML = `<div class="py-10 text-center text-gray-300">ยังไม่มีรายการเมนู</div>`; return; }
+            if(items.length === 0) { container.innerHTML = `<div class="py-10 text-center text-gray-300 font-bold">ยังไม่มีรายการเมนู</div>`; return; }
             container.innerHTML = items.map(item => `
                 <div class="bg-white p-3 rounded-2xl flex gap-4 shadow-sm border border-gray-100 cursor-pointer active:scale-95 transition-all" onclick="window.openSelectionModal('${item.id}')">
                     <img src="${item.img}" class="w-20 h-20 rounded-xl object-cover bg-gray-50 shrink-0">
@@ -427,7 +426,7 @@
 
         window.submitOrder = async () => {
             const btn = document.getElementById('checkout-btn');
-            btn.innerText = "กำลังสั่ง..."; btn.disabled = true;
+            btn.innerText = "กำลังส่ง..."; btn.disabled = true;
             const urlParams = new URLSearchParams(window.location.search);
             const tableNo = urlParams.get('table') || 'หน้าร้าน';
             let queueNo = 1;
@@ -451,7 +450,72 @@
             }
         };
 
-        // --- ADMIN LOGIC ---
+        // --- MODAL & CARTS ---
+        window.openSelectionModal = (id) => {
+            const item = menuItems.find(i => i.id === id);
+            if(!item) return;
+            currentModalItem = item; modalQty = 1;
+            document.getElementById('modal-img').src = item.img;
+            document.getElementById('modal-title').innerText = item.name;
+            document.getElementById('modal-price').innerText = `฿${item.price}`;
+            document.getElementById('modal-qty-display').innerText = 1;
+            document.getElementById('modal-total-price').innerText = item.price;
+            document.getElementById('modal-spice-section').classList.toggle('hidden', item.cat !== 'mala');
+            document.querySelectorAll('.spice-radio').forEach(r => r.checked = false);
+            document.getElementById('modal-note').value = "";
+            document.getElementById('selection-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('selection-content').classList.add('show'), 10);
+        };
+        
+        window.closeSelectionModal = () => {
+            document.getElementById('selection-content').classList.remove('show');
+            setTimeout(() => document.getElementById('selection-modal').classList.add('hidden'), 200);
+        };
+
+        window.confirmSelection = () => {
+            if(!currentModalItem) return;
+            let spice = currentModalItem.cat === 'mala' ? document.querySelector('input[name="spice"]:checked')?.value : null;
+            if(currentModalItem.cat === 'mala' && !spice) { alert("กรุณาเลือกความเผ็ด"); return; }
+            cart.push({...currentModalItem, qty: modalQty, spice, note: document.getElementById('modal-note').value});
+            updateCartBadge(); 
+            window.closeSelectionModal();
+        };
+
+        function updateCartBadge() {
+            const count = cart.reduce((s,i) => s + i.qty, 0);
+            const badge = document.getElementById('cart-badge');
+            if(badge) {
+                badge.innerText = count;
+                badge.classList.toggle('hidden', count === 0);
+            }
+            const list = document.getElementById('cart-items');
+            if(!list) return;
+            document.getElementById('cart-empty').classList.toggle('hidden', cart.length > 0);
+            list.innerHTML = cart.map((i,idx) => `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm animate-fade-in">
+                    <div class="flex-1">
+                        <div class="text-sm font-bold text-gray-800">${i.qty}x ${i.name} ${i.spice?'<span class="text-red-500 font-bold">['+i.spice+']</span>':''}</div>
+                        ${i.note ? `<div class="text-[10px] text-gray-400 font-bold">📝 ${i.note}</div>` : ''}
+                    </div>
+                    <button onclick="window.delFromCart(${idx})" class="text-red-500 p-2 hover:bg-red-50 rounded-full transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+            document.getElementById('cart-total').innerText = `฿${cart.reduce((s,i)=>s+(i.price*i.qty),0).toLocaleString()}`;
+            lucide.createIcons();
+        }
+
+        window.toggleCart = () => {
+            const drawer = document.getElementById('cart-drawer');
+            const overlay = document.getElementById('cart-overlay');
+            if(drawer.classList.contains('open')) {
+                drawer.classList.remove('open'); overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            } else {
+                overlay.classList.remove('hidden'); setTimeout(() => { overlay.classList.add('opacity-100'); drawer.classList.add('open'); }, 10);
+            }
+        };
+
+        // --- ADMIN HELPERS ---
         window.handleImageUpload = (input) => {
             if(input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -504,59 +568,13 @@
             document.getElementById('print-qr').innerHTML = '';
             try {
                 new QRCode(document.getElementById('qr-image'), { text: url, width: 180, height: 180 });
-                new QRCode(document.getElementById('print-qr'), { text: url, width: 250, height: 250 });
+                new QRCode(document.getElementById('print-qr'), { text: url, width: 320, height: 320 });
             } catch(e) {}
             document.getElementById('print-table-no').innerText = `โต๊ะที่ ${table}`;
         };
 
-        // --- COMMON ---
-        window.openSelectionModal = (id) => {
-            const item = menuItems.find(i => i.id === id);
-            currentModalItem = item; modalQty = 1;
-            document.getElementById('modal-img').src = item.img;
-            document.getElementById('modal-title').innerText = item.name;
-            document.getElementById('modal-price').innerText = `฿${item.price}`;
-            document.getElementById('modal-qty-display').innerText = 1;
-            document.getElementById('modal-total-price').innerText = item.price;
-            document.getElementById('modal-spice-section').classList.toggle('hidden', item.cat !== 'mala');
-            document.getElementById('selection-modal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('selection-content').classList.add('show'), 10);
-        };
-        window.closeSelectionModal = () => {
-            document.getElementById('selection-content').classList.remove('show');
-            setTimeout(() => document.getElementById('selection-modal').classList.add('hidden'), 200);
-        };
-        window.toggleCart = () => {
-            const drawer = document.getElementById('cart-drawer');
-            const overlay = document.getElementById('cart-overlay');
-            if(drawer.classList.contains('open')) {
-                drawer.classList.remove('open'); overlay.classList.remove('opacity-100');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-            } else {
-                overlay.classList.remove('hidden'); setTimeout(() => { overlay.classList.add('opacity-100'); drawer.classList.add('open'); }, 10);
-            }
-        };
+        // --- REMAINING UTILS ---
         window.adjustModalQty = (d) => { if(!currentModalItem) return; modalQty = Math.max(1, modalQty + d); document.getElementById('modal-qty-display').innerText = modalQty; document.getElementById('modal-total-price').innerText = (currentModalItem.price * modalQty).toLocaleString(); };
-        window.confirmSelection = () => {
-            if(!currentModalItem) return;
-            let spice = currentModalItem.cat === 'mala' ? document.querySelector('input[name="spice"]:checked')?.value : null;
-            if(currentModalItem.cat === 'mala' && !spice) { alert("กรุณาเลือกความเผ็ด"); return; }
-            cart.push({...currentModalItem, qty: modalQty, spice, note: document.getElementById('modal-note').value});
-            updateCartBadge(); window.closeSelectionModal();
-        };
-        function updateCartBadge() {
-            const count = cart.reduce((s,i) => s + i.qty, 0);
-            const badge = document.getElementById('cart-badge');
-            if(badge) {
-                badge.innerText = count;
-                badge.classList.toggle('hidden', count === 0);
-            }
-            const list = document.getElementById('cart-items');
-            document.getElementById('cart-empty').classList.toggle('hidden', cart.length > 0);
-            list.innerHTML = cart.map((i,idx) => `<div class="flex justify-between bg-gray-50 p-3 rounded-xl border border-gray-100"><div class="flex-1 text-sm font-bold text-gray-800">${i.qty}x ${i.name} ${i.spice?'['+i.spice+']':''}</div><button onclick="window.delFromCart(${idx})" class="text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
-            document.getElementById('cart-total').innerText = `฿${cart.reduce((s,i)=>s+(i.price*i.qty),0).toLocaleString()}`;
-            lucide.createIcons();
-        }
         window.delFromCart = (idx) => { cart.splice(idx, 1); updateCartBadge(); };
         window.switchAdminTab = (t) => {
             ['orders','accounting','menu','qr'].forEach(ID => document.getElementById('section-'+ID).classList.add('hidden'));
@@ -577,16 +595,16 @@
         function renderAdminMenu() {
             const l = document.getElementById('admin-menu-list');
             if(!l) return;
-            l.innerHTML = menuItems.map(i => `<div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-100"><img src="${i.img}" class="w-10 h-10 rounded-lg object-cover bg-gray-50 shrink-0"><div class="flex-1 text-sm font-bold truncate">${i.name} - ฿${i.price}</div><button onclick="window.delMenu('${i.id}')" class="p-1 bg-red-50 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
+            l.innerHTML = menuItems.map(i => `<div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-100 shadow-sm"><img src="${i.img}" class="w-10 h-10 rounded-lg object-cover bg-gray-50 shrink-0"><div class="flex-1 text-sm font-bold truncate">${i.name} - ฿${i.price}</div><button onclick="window.delMenu('${i.id}')" class="p-1 bg-red-50 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
             lucide.createIcons();
         }
         function renderAdminOrders() {
             const list = document.getElementById('orders-list');
             if(!list) return;
             const active = allOrders.filter(o => o.status !== 'completed');
-            if(active.length === 0) { list.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400">ไม่มีออเดอร์ใหม่</div>`; return; }
+            if(active.length === 0) { list.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400 font-bold">ไม่มีออเดอร์ใหม่</div>`; return; }
             list.innerHTML = active.map(o => `
-                <div class="bg-white p-5 rounded-2xl shadow-sm border ${o.status==='pending' ? 'border-red-500' : 'border-gray-100'}">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border ${o.status==='pending' ? 'border-red-500 ring-2 ring-red-100' : 'border-gray-100'}">
                     <div class="flex justify-between items-start mb-3">
                         <span class="text-xl font-black text-red-600">#${o.queueNo}</span>
                         <span class="text-xs font-bold text-gray-400">โต๊ะ: ${o.table}</span>
@@ -594,7 +612,7 @@
                     <div class="space-y-1 mb-4 border-y border-gray-50 py-2">
                         ${o.items.map(i => `<div class="text-sm font-bold">${i.qty}x ${i.name} ${i.spice ? '<span class="text-red-500 text-[10px]">['+i.spice+']</span>' : ''}</div>`).join('')}
                     </div>
-                    <button onclick="window.updateStatus('${o.id}', '${o.status==='pending'?'cooking':'completed'}')" class="w-full ${o.status==='pending'?'bg-gray-900':'bg-green-600'} text-white py-2 rounded-xl text-xs font-bold shadow-sm">
+                    <button onclick="window.updateStatus('${o.id}', '${o.status==='pending'?'cooking':'completed'}')" class="w-full ${o.status==='pending'?'bg-gray-900':'bg-green-600'} text-white py-2 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all">
                         ${o.status==='pending'?'รับออเดอร์':'เสิร์ฟเรียบร้อย'}
                     </button>
                 </div>
