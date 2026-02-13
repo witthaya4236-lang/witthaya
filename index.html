@@ -68,7 +68,7 @@
         ⚠️ โหมดจำลอง (Offline): ข้อมูลจะหายไปเมื่อรีเฟรช | <span id="current-url-display"></span>
     </div>
 
-    <!-- Navigation Tab (เฉพาะเจ้าของร้านถึงจะเห็น และต้องใส่รหัส) -->
+    <!-- Navigation Tab -->
     <div id="main-nav" class="fixed top-0 left-0 right-0 z-[60] flex justify-center p-2 pointer-events-none no-print mt-2 transition-opacity duration-300">
         <div class="bg-black/80 backdrop-blur-md text-white rounded-full p-1 flex gap-1 pointer-events-auto shadow-xl border border-white/20">
             <button onclick="switchView('customer')" id="tab-customer" class="px-5 py-2 rounded-full text-xs font-bold transition-all bg-red-600 shadow-lg">
@@ -672,18 +672,7 @@
             const ta = document.getElementById('tab-admin');
             
             if (v === 'admin') { 
-                // เพิ่มระบบตรวจสอบรหัสผ่าน
-                const isAdmin = sessionStorage.getItem('isAdmin');
-                if (!isAdmin) {
-                    const pass = prompt("กรุณาใส่รหัสผ่านร้านค้า (รหัส: 1234)"); 
-                    if (pass === '1234') {
-                        sessionStorage.setItem('isAdmin', 'true');
-                    } else {
-                        alert("รหัสผ่านไม่ถูกต้อง");
-                        return; // หยุดการทำงาน ไม่สลับหน้า
-                    }
-                }
-
+                // Removed password check logic
                 cv.classList.add('hidden'); av.classList.remove('hidden'); 
                 ta.classList.add('bg-red-600', 'shadow-lg'); ta.classList.remove('hover:bg-white/10');
                 tc.classList.remove('bg-red-600', 'shadow-lg'); tc.classList.add('hover:bg-white/10');
