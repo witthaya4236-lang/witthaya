@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>หมาล่าลิ้นชา & น้ำชง</title>
-    <!-- Tailwind CDN -->
+    <title>หมาล่าลิ้นชา & น้ำชง - สั่งอาหารแบบละเอียด</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- QR Code Script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Prompt', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* --- CRITICAL FIX: บังคับซ่อน Element หาก Tailwind โหลดไม่ทัน --- */
         .hidden { display: none !important; }
         
         .cart-drawer { transition: transform 0.3s ease-in-out; transform: translateY(100%); }
@@ -38,9 +33,10 @@
 <body class="bg-gray-50 min-h-screen font-bold text-gray-800">
 
     <!-- Loading Screen (กันหน้าขาว) -->
-    <div id="app-loading" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center">
+    <div id="app-loading" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-10 h-10 border-4 border-red-200 border-t-red-600 rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-400 text-sm animate-pulse">กำลังเตรียมร้าน...</p>
+        <p id="loading-text" class="text-gray-400 text-sm animate-pulse">กำลังเตรียมร้าน...</p>
+        <button onclick="forceCloseLoading()" class="mt-4 text-xs text-red-500 underline hidden" id="force-close-btn">กดตรงนี้ถ้าค้างนานเกินไป</button>
     </div>
 
     <!-- Navigation Tab -->
@@ -271,13 +267,14 @@
             <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
                 <h2 class="text-xl font-bold mb-6">พิมพ์ QR Code ตั้งโต๊ะ</h2>
                 <div class="space-y-4 mb-6">
-                    <input type="text" id="qr-base-url" placeholder="URL เว็บ..." oninput="updateAdminQR()" class="w-full px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-xs font-bold text-center outline-none">
+                    <input type="text" id="qr-base-url" placeholder="URL เว็บ (เช่น https://...)" oninput="updateAdminQR()" class="w-full px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-xs font-bold text-center outline-none">
                     <div class="flex items-center justify-center gap-2">
                         <span class="text-sm font-bold">โต๊ะที่</span>
                         <input type="text" id="qr-table-input" value="01" oninput="updateAdminQR()" class="w-20 px-3 py-2 rounded-xl bg-gray-100 text-center font-black outline-none">
                     </div>
                 </div>
-                <div id="qr-image" class="w-48 h-48 mx-auto bg-white mb-6"></div>
+                <!-- DIV Container for qrcode.js -->
+                <div id="qr-image" class="w-48 h-48 mx-auto bg-white mb-6 flex justify-center items-center"></div>
                 <button onclick="window.print()" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 mx-auto">
                     <i data-lucide="printer" class="w-4 h-4"></i> พิมพ์ป้าย
                 </button>
@@ -289,7 +286,8 @@
     <div class="print-only p-10 text-center">
         <div class="border-[8px] border-black rounded-[40px] p-10 inline-block">
             <h1 class="text-5xl font-black mb-4">MALA SHOP</h1>
-            <div id="print-qr" class="w-64 h-64 mx-auto my-8"></div>
+            <!-- DIV Container for qrcode.js -->
+            <div id="print-qr" class="w-64 h-64 mx-auto my-8 bg-white flex justify-center items-center"></div>
             <p id="print-table-no" class="text-4xl font-black">TABLE 01</p>
             <p class="mt-4 text-gray-400 text-sm">สแกนเพื่อสั่งอาหาร</p>
         </div>
@@ -336,7 +334,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, addDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG (YOURS)
+        // FIREBASE CONFIG (MalaShop)
         const firebaseConfig = {
             apiKey: "AIzaSyCQtCMBlwgji6RP8wjhwJVDR2iKXEY2cF0",
             authDomain: "witthaya-5d537.firebaseapp.com",
@@ -351,8 +349,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // **ใช้ App ID เดิมเพื่อให้ข้อมูลเก่ากลับมา**
-        const appId = 'default-app-id'; 
+        const appId = 'malashop-app-001'; 
 
         let user = null;
         let menuItems = [];
@@ -369,24 +366,46 @@
         
         // Auto-detect URL for QR Code
         const qrInput = document.getElementById('qr-base-url');
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-             // ถ้าเปิดในเครื่อง ให้ใส่ IP เครื่องตัวเอง (แก้เองได้)
-             qrInput.value = "http://192.168.1.XX:5500/index.html"; 
-        } else {
-             // ถ้าอยู่บน Server (Vercel) ให้ใช้ URL จริง
-             qrInput.value = window.location.href.split('?')[0];
+        if(qrInput) {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                 qrInput.value = "http://192.168.1.XX:5500/index.html"; 
+            } else {
+                 qrInput.value = window.location.href.split('?')[0];
+            }
         }
 
         const runInit = async () => {
             try {
                 await signInAnonymously(auth);
-                document.getElementById('app-loading').classList.add('hidden');
-                updateAdminQR(); // Gen QR Initial
+                // Hide loading only after success auth (or fallback)
+                setTimeout(() => {
+                    const loading = document.getElementById('app-loading');
+                    if(loading) loading.classList.add('hidden');
+                }, 1000);
+                
+                if(document.getElementById('qr-image')) updateAdminQR();
             } catch (e) {
                 console.error("Auth Failed", e);
-                alert("เชื่อมต่อระบบไม่สำเร็จ กรุณารีเฟรช");
+                // Force hide loading to prevent lock-out, show alert
+                document.getElementById('app-loading').classList.add('hidden');
+                
+                if(e.code === 'auth/configuration-not-found' || e.code === 'auth/operation-not-allowed') {
+                    alert("กรุณาเปิดโหมด Anonymous ใน Firebase Console ก่อนครับ");
+                }
             }
         };
+        
+        // Add forced close button event
+        window.forceCloseLoading = () => {
+             document.getElementById('app-loading').classList.add('hidden');
+        };
+        
+        // Show force close button after 5s
+        setTimeout(() => {
+            const btn = document.getElementById('force-close-btn');
+            if(btn) btn.classList.remove('hidden');
+        }, 5000);
+
         runInit();
 
         onAuthStateChanged(auth, (u) => {
@@ -416,16 +435,20 @@
 
         // --- CORE FUNCTIONS ---
         
-        // 1. Menu Rendering
         window.filterMenu = (cat) => {
             currentFilter = cat;
-            document.getElementById('btn-mala').className = cat==='mala' ? "flex-none px-6 py-2 rounded-xl bg-red-600 text-white shadow-sm transition-all text-sm" : "flex-none px-6 py-2 rounded-xl bg-white text-gray-500 border border-gray-200 shadow-sm transition-all text-sm";
-            document.getElementById('btn-drinks').className = cat==='drinks' ? "flex-none px-6 py-2 rounded-xl bg-red-600 text-white shadow-sm transition-all text-sm" : "flex-none px-6 py-2 rounded-xl bg-white text-gray-500 border border-gray-200 shadow-sm transition-all text-sm";
+            const btnMala = document.getElementById('btn-mala');
+            const btnDrinks = document.getElementById('btn-drinks');
+            if(btnMala && btnDrinks) {
+                btnMala.className = cat==='mala' ? "flex-none px-6 py-2 rounded-xl bg-red-600 text-white shadow-sm transition-all text-sm" : "flex-none px-6 py-2 rounded-xl bg-white text-gray-500 border border-gray-200 shadow-sm transition-all text-sm";
+                btnDrinks.className = cat==='drinks' ? "flex-none px-6 py-2 rounded-xl bg-red-600 text-white shadow-sm transition-all text-sm" : "flex-none px-6 py-2 rounded-xl bg-white text-gray-500 border border-gray-200 shadow-sm transition-all text-sm";
+            }
             renderMenu();
         };
 
         function renderMenu() {
             const container = document.getElementById('menu-container');
+            if(!container) return;
             const items = menuItems.filter(i => i.cat === currentFilter);
             if(items.length === 0) { container.innerHTML = `<div class="py-10 text-center text-gray-300">ไม่มีเมนู</div>`; return; }
             container.innerHTML = items.map(item => `
@@ -443,7 +466,6 @@
             lucide.createIcons();
         }
 
-        // 2. Selection Modal
         window.openSelectionModal = (id) => {
             const item = menuItems.find(i => i.id === id);
             currentModalItem = item; modalQty = 1;
@@ -474,6 +496,10 @@
             document.getElementById('modal-total-price').innerText = (currentModalItem.price * modalQty).toLocaleString();
         };
 
+        window.updateModalState = () => {
+            // Placeholder for radio state update if needed
+        };
+
         window.confirmSelection = () => {
             if(!currentModalItem) return;
             let spice = null;
@@ -492,7 +518,6 @@
             window.closeSelectionModal();
         };
 
-        // 3. Cart & Order
         function updateCartBadge() {
             const count = cart.reduce((s,i) => s + i.qty, 0);
             const badge = document.getElementById('cart-badge');
@@ -600,6 +625,7 @@
         // 4. Admin Functions
         function renderAdminOrders() {
             const list = document.getElementById('orders-list');
+            if(!list) return;
             const active = allOrders.filter(o => o.status !== 'completed');
             if(active.length === 0) { list.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400">ไม่มีออเดอร์ใหม่</div>`; return; }
             
@@ -669,6 +695,7 @@
         // Admin Menu
         function renderAdminMenu() {
             const list = document.getElementById('admin-menu-list');
+            if(!list) return;
             list.innerHTML = menuItems.map(i => `
                 <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100">
                     <img src="${i.img}" class="w-12 h-12 rounded-lg object-cover bg-gray-50">
@@ -730,18 +757,27 @@
             document.getElementById(`section-${t}`).classList.remove('hidden');
             document.getElementById(`admin-tab-${t}`).classList.replace('bg-white', 'bg-red-600');
             document.getElementById(`admin-tab-${t}`).classList.replace('text-gray-500', 'text-white');
+            // Re-render QR when tab switched
+            if(t === 'qr') updateAdminQR();
         };
 
         window.updateAdminQR = () => {
-            const base = document.getElementById('qr-base-url').value;
-            const table = document.getElementById('qr-table-input').value;
+            const baseInput = document.getElementById('qr-base-url');
+            const tableInput = document.getElementById('qr-table-input');
+            
+            if (!baseInput || !tableInput) return;
+
+            const base = baseInput.value;
+            const table = tableInput.value;
             const url = `${base}?table=${table}`;
             
             document.getElementById('qr-image').innerHTML = '';
             document.getElementById('print-qr').innerHTML = '';
             
-            new QRCode(document.getElementById('qr-image'), { text: url, width: 180, height: 180 });
-            new QRCode(document.getElementById('print-qr'), { text: url, width: 300, height: 300 });
+            try {
+                new QRCode(document.getElementById('qr-image'), { text: url, width: 180, height: 180 });
+                new QRCode(document.getElementById('print-qr'), { text: url, width: 250, height: 250 });
+            } catch(e) { console.log('QR waiting for lib...'); }
             
             document.getElementById('print-table-no').innerText = `TABLE ${table}`;
         };
