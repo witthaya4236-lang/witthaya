@@ -6,7 +6,6 @@
     <title>หมาล่าลิ้นชา & น้ำชง - ระบบจัดการร้าน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- ใช้ qrcode.js เพื่อสร้าง QR Code ในเครื่อง (แก้ปัญหารูปไม่ขึ้น) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -37,6 +36,7 @@
             100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
         }
         
+        /* Custom Radio Button for Spice */
         .spice-radio:checked + label {
             background-color: #fef2f2;
             border-color: #ef4444;
@@ -50,11 +50,6 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-bold">
-
-    <!-- Offline Warning Banner -->
-    <div id="local-warning" class="hidden bg-yellow-500 text-white text-center py-2 text-xs font-bold no-print z-50 relative px-4">
-        ⚠️ โหมดจำลอง (Offline): ยังไม่ได้เชื่อมต่อฐานข้อมูล (หากต้องการใช้ออนไลน์ต้องใส่ Config Firebase)
-    </div>
 
     <!-- Navigation Tab -->
     <div id="main-nav" class="fixed top-0 left-0 right-0 z-[60] flex justify-center p-2 pointer-events-none no-print mt-2 transition-opacity duration-300">
@@ -90,6 +85,7 @@
         </header>
 
         <main class="max-w-md mx-auto pb-20">
+            <!-- Promotion Banner -->
             <div class="p-4">
                 <div class="bg-gradient-to-r from-red-600 to-orange-500 rounded-3xl p-6 text-white shadow-md relative overflow-hidden">
                     <div class="relative z-10">
@@ -100,6 +96,7 @@
                 </div>
             </div>
 
+            <!-- Category Selector -->
             <div class="flex gap-2 px-4 mb-4 sticky top-[100px] bg-gray-50/95 backdrop-blur py-2 z-30 font-bold">
                 <button onclick="filterMenu('mala')" id="btn-mala" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-600 text-white shadow-sm transition-all active:scale-95">
                     <i data-lucide="flame" class="w-4 h-4"></i> หมาล่า
@@ -261,16 +258,10 @@
 
     <!-- Print Template -->
     <div class="print-only p-20 text-center">
-        <div class="border-[12px] border-red-600 rounded-[100px] p-20 inline-block bg-white shadow-2xl">
-            <h1 class="text-7xl font-black text-red-600 mb-2 uppercase italic tracking-tighter underline">หมาล่าลิ้นชา</h1>
-            <p class="text-2xl text-gray-400 mb-12 font-bold tracking-[0.5em] uppercase">MALA LIN CHA</p>
-            <div class="bg-white p-8 inline-block border-2 border-gray-100 rounded-[60px] shadow-sm mb-12">
-                <!-- QR Container for Print -->
-                <div id="print-qr" class="w-80 h-80 mx-auto bg-white flex justify-center items-center"></div>
-            </div>
-            <div class="bg-red-600 text-white rounded-full py-6 px-20 inline-block shadow-lg"><p id="print-table-no" class="text-7xl font-black">โต๊ะที่ 01</p></div>
-            <p class="mt-12 text-gray-300 font-black text-xl tracking-widest">SCAN TO ORDER • สแกนเพื่อสั่ง</p>
-        </div>
+        <div class="border-[12px] border-red-600 rounded-[100px] p-20 inline-block bg-white shadow-2xl"><h1 class="text-7xl font-black text-red-600 mb-2 uppercase italic tracking-tighter underline">หมาล่าลิ้นชา</h1><p class="text-2xl text-gray-400 mb-12 font-bold tracking-[0.5em] uppercase">MALA LIN CHA</p><div class="bg-white p-8 inline-block border-2 border-gray-100 rounded-[60px] shadow-sm mb-12">
+            <!-- QR Container for Print -->
+            <div id="print-qr" class="w-80 h-80 mx-auto bg-white flex justify-center items-center"></div>
+        </div><div class="bg-red-600 text-white rounded-full py-6 px-20 inline-block shadow-lg"><p id="print-table-no" class="text-7xl font-black">โต๊ะที่ 01</p></div><p class="mt-12 text-gray-300 font-black text-xl tracking-widest">SCAN TO ORDER • สแกนเพื่อสั่ง</p></div>
     </div>
 
     <!-- Success Modal -->
@@ -298,13 +289,13 @@
         //  ⚠️ สำคัญ: ใส่รหัส Firebase ที่นี่เพื่อให้ใช้งานข้ามเครื่องได้
         // ==========================================
         const userFirebaseConfig = {
-            apiKey: "AIzaSyCQtCMBlwgji6RP8wjhwJVDR2iKXEY2cF0",
-            authDomain: "witthaya-5d537.firebaseapp.com",
-            projectId: "witthaya-5d537",
-            storageBucket: "witthaya-5d537.firebasestorage.app",
-            messagingSenderId: "693256668965",
-            appId: "1:693256668965:web:7608e89619a279eeeafccc",
-            measurementId: "G-M7LR9ZHSY6"
+            apiKey: "AIzaSyBeZCptmHAfSF_CGpLKCPXatp0hvlVtYo8",
+            authDomain: "malashop-45181.firebaseapp.com",
+            projectId: "malashop-45181",
+            storageBucket: "malashop-45181.firebasestorage.app",
+            messagingSenderId: "1062060224698",
+            appId: "1:1062060224698:web:badeadc3c963ca33861283",
+            measurementId: "G-E19PFFEEWH"
         };
 
         // Setup Firebase safely
@@ -313,12 +304,9 @@
 
         try {
             let config;
-            // 1. ถ้าผู้ใช้ใส่ Config เอง ให้ใช้ตัวนั้นก่อน
             if (userFirebaseConfig.apiKey) {
                 config = userFirebaseConfig;
-            } 
-            // 2. ถ้าไม่มี ให้ลองใช้ Config ของระบบ (Environment)
-            else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            } else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                 config = JSON.parse(__firebase_config);
             }
 
@@ -348,11 +336,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         let tableNo = urlParams.get('table') || "หน้าเคาน์เตอร์";
         
-        // Hide nav bar if table param exists (Customer Mode)
         const tableParam = urlParams.get('table');
         if (tableParam) {
             document.getElementById('main-nav').classList.add('hidden');
-            // Show exit button in customer mode
             document.getElementById('exit-customer-btn').classList.remove('hidden');
         }
 
@@ -391,7 +377,6 @@
                 const isProduction = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost';
                 const savedIsLocal = savedBaseUrl && (savedBaseUrl.includes('127.0.0.1') || savedBaseUrl.includes('localhost'));
 
-                // ถ้าอยู่บนเว็บจริง (GitHub/Vercel) แต่ค่าที่จำไว้เป็น Localhost -> ให้ลบค่าจำทิ้งซะ จะได้ใช้ลิงก์จริง
                 if (isProduction && savedIsLocal) {
                    savedBaseUrl = null; 
                 }
@@ -399,10 +384,11 @@
                 if (savedBaseUrl) {
                     baseUrlInput.value = savedBaseUrl;
                 } else {
-                    if (!isProduction) {
+                    // Default to current URL or the one you want
+                    if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' || window.location.protocol === 'file:') {
                         baseUrlInput.value = "http://192.168.1.42:5500/index.html"; 
                     } else {
-                        baseUrlInput.value = currentUrl; 
+                        baseUrlInput.value = window.location.href.split('?')[0]; 
                     }
                 }
             }
@@ -847,8 +833,4 @@
 
         // REMOVED simulateScan function
 
-        window.closeSuccess = () => { document.getElementById('success-content').classList.add('scale-90', 'opacity-0'); setTimeout(() => { document.getElementById('success-modal').classList.add('hidden'); window.toggleCart(); }, 400); };
-        window.showSuccess = () => { const modal = document.getElementById('success-modal'); const content = document.getElementById('success-content'); modal.classList.remove('hidden'); setTimeout(() => content.classList.add('scale-100', 'opacity-100'), 10); }
-    </script>
-</body>
-</html>
+        window.closeSuccess = () => { document.getElementById('success-content').classList.add('scale-90', 'opacity-0'); setTimeout
