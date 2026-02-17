@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดการเช่ารถ - Supabase Cloud Storage</title>
+    <title>ระบบจัดการเช่ารถ - Cloud Dashboard</title>
     
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,270 +11,501 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #f1f5f9; }
+        body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
+        
         .glass-panel {
-            background: #ffffff;
-            border-radius: 1.25rem;
-            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.07);
-            border: 1px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
-        .status-pill {
-            padding: 4px 12px; border-radius: 9999px;
-            font-size: 0.7rem; font-weight: 700;
-        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* License Plate */
         .license-plate {
-            font-weight: 700; color: #1e293b;
-            padding: 2px 8px; background: #f8fafc;
-            border: 1px solid #e2e8f0; border-radius: 6px;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 700;
+            color: #1f2937;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
         }
-        .date-badge {
-            padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.75rem;
+
+        .color-dot {
+            height: 12px; width: 12px; border-radius: 50%;
+            display: inline-block; margin-right: 6px;
+            border: 1px solid rgba(0,0,0,0.1);
+            vertical-align: middle;
         }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { animation: fadeInDown 0.4s ease-out forwards; }
+        
+        @keyframes ping-slow {
+            75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
     </style>
 </head>
-<body class="text-slate-700">
+<body class="text-gray-700 antialiased">
 
     <!-- Login Screen -->
     <div id="loginScreen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-100">
-        <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md mx-4 border border-gray-100">
-            <div class="text-center mb-10">
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-50 text-indigo-600 mb-4">
-                    <i class="fa-solid fa-cloud text-4xl"></i>
+        <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-sm mx-4 animate-fade-in-down border border-white">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 text-white mb-4 shadow-lg shadow-indigo-200">
+                    <i class="fa-solid fa-cloud text-3xl"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800">Cloud Rental System</h2>
-                <p class="text-slate-400 text-sm mt-1 uppercase tracking-widest">Supabase Login</p>
+                <h2 class="text-2xl font-bold text-gray-800">เข้าสู่ระบบ</h2>
+                <p class="text-gray-400 text-sm mt-1">Car Rental Management</p>
             </div>
             <form onsubmit="handleLogin(event)">
-                <div class="mb-5">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Username</label>
-                    <input class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 outline-none focus:ring-2 focus:ring-indigo-500" id="username" type="text" value="admin999">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Username</label>
+                    <input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" id="username" type="text" placeholder="ระบุชื่อผู้ใช้งาน">
                 </div>
-                <div class="mb-8">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Password</label>
-                    <input class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 outline-none focus:ring-2 focus:ring-indigo-500" id="password" type="password" placeholder="••••••••">
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Password</label>
+                    <input class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" id="password" type="password" placeholder="ระบุรหัสผ่าน">
                 </div>
-                <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition transform active:scale-95" type="submit">เข้าสู่ระบบ</button>
+                <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-100 transition transform hover:-translate-y-0.5" type="submit">
+                    เข้าใช้งานระบบ
+                </button>
             </form>
         </div>
     </div>
 
     <!-- Main Dashboard -->
-    <div id="dashboardContent" class="hidden">
-        <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-            <div class="max-w-full mx-auto px-6 lg:px-10 h-20 flex justify-between items-center">
-                <div class="flex items-center">
-                    <i class="fa-solid fa-car-side text-indigo-600 text-2xl mr-4"></i>
-                    <h1 class="text-xl font-bold">Rental <span class="text-indigo-600">Cloud</span></h1>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="openModal('add')" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center hover:bg-black transition">
-                        <i class="fa-solid fa-plus mr-2"></i> เพิ่มรายการ
-                    </button>
-                    <button onclick="toggleSettings()" class="bg-white border border-slate-200 p-2.5 rounded-xl text-slate-500 hover:text-indigo-600"><i class="fa-solid fa-gear"></i></button>
-                    <button onclick="fetchData()" id="refreshBtn" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition flex items-center text-sm">
-                        <i class="fa-solid fa-arrows-rotate mr-2"></i>รีเฟรช
-                    </button>
-                    <button onclick="logout()" class="text-slate-300 hover:text-rose-500 p-2 transition"><i class="fa-solid fa-power-off text-lg"></i></button>
+    <div id="dashboardContent" class="hidden min-h-screen pb-10">
+        
+        <!-- Navbar -->
+        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center">
+                        <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-md shadow-indigo-200">
+                            <i class="fa-solid fa-car-side text-sm"></i>
+                        </div>
+                        <h1 class="text-lg md:text-xl font-bold text-gray-800 tracking-tight">Car Rental <span class="text-indigo-600">Dashboard</span></h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <!-- Add Button -->
+                        <button onclick="openModal('add')" class="bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center shadow-lg shadow-slate-200 transform active:scale-95">
+                            <i class="fa-solid fa-plus mr-2"></i> <span class="hidden sm:inline">เพิ่มรายการ</span>
+                        </button>
+
+                        <div class="h-6 w-px bg-gray-200 mx-1 hidden md:block"></div>
+
+                        <!-- Settings -->
+                        <button onclick="toggleSettings()" class="p-2 text-gray-400 hover:text-indigo-600 transition rounded-lg hover:bg-gray-50" title="ตั้งค่า Cloud">
+                            <i class="fa-solid fa-database text-lg"></i>
+                        </button>
+
+                        <!-- Notification -->
+                        <div class="relative">
+                            <button onclick="toggleNotifications()" class="p-2 text-gray-400 hover:text-indigo-600 transition rounded-lg hover:bg-gray-50 relative">
+                                <i class="fa-solid fa-bell text-lg"></i>
+                                <span id="notifyBadge" class="hidden absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                                <span id="notifyPing" class="hidden absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-400 animate-ping-slow"></span>
+                            </button>
+                            <!-- Dropdown -->
+                            <div id="notificationDropdown" class="hidden absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 transform origin-top-right transition-all">
+                                <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">แจ้งเตือนคืนรถ</h3>
+                                    <span class="text-[10px] text-gray-400" id="notifyDate"></span>
+                                </div>
+                                <div id="notificationList" class="max-h-64 overflow-y-auto"></div>
+                            </div>
+                        </div>
+
+                        <!-- Refresh -->
+                        <button onclick="fetchData()" id="refreshBtn" class="p-2 text-gray-400 hover:text-emerald-600 transition rounded-lg hover:bg-gray-50" title="อัปเดตข้อมูล">
+                            <i class="fa-solid fa-arrows-rotate text-lg"></i>
+                        </button>
+
+                        <!-- Logout -->
+                        <button onclick="logout()" class="p-2 text-red-400 hover:text-red-600 transition rounded-lg hover:bg-red-50 ml-1" title="ออกจากระบบ">
+                            <i class="fa-solid fa-power-off text-lg"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
 
-        <main class="max-w-full mx-auto px-6 lg:px-10 py-8">
-            <!-- KPI -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="glass-panel p-6">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">รายได้ค่าเช่ารวม</p>
-                    <h3 class="text-2xl font-bold text-emerald-600" id="netIncome">0 ฿</h3>
-                </div>
-                <div class="glass-panel p-6">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">ยอดเงินมัดจำรวม</p>
-                    <h3 class="text-2xl font-bold text-rose-500" id="totalDeposit">0 ฿</h3>
-                </div>
-                <div class="glass-panel p-6">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">กำลังเช่า</p>
-                    <h3 class="text-2xl font-bold" id="activeRentals">0 คัน</h3>
-                </div>
-                <div class="glass-panel p-6">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">รายการทั้งหมด</p>
-                    <h3 class="text-2xl font-bold" id="totalTransactions">0 รายการ</h3>
-                </div>
-            </div>
-
-            <!-- Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="glass-panel p-6 lg:col-span-2">
-                    <h3 class="font-bold text-slate-700 mb-4">รายได้ตามรุ่นรถ</h3>
-                    <div class="h-64"><canvas id="revenueChart"></canvas></div>
-                </div>
-                <div class="glass-panel p-6">
-                    <h3 class="font-bold text-slate-700 mb-4 text-center">สัดส่วนสถานะ</h3>
-                    <div class="h-64"><canvas id="statusChart"></canvas></div>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="glass-panel p-6">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <h3 class="font-bold text-slate-800 text-lg">รายการจัดการเช่ารถ (Real-time)</h3>
-                    <div class="flex gap-2">
-                        <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="ค้นหา..." class="border border-slate-200 rounded-full px-4 py-2 text-sm w-64 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-emerald-700"><i class="fa-solid fa-file-excel mr-1"></i> Export</button>
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- 1. Grand Total -->
+                <div class="glass-panel p-5 relative overflow-hidden group border-l-4 border-indigo-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">ยอดเงินรวม+บวกมัดจำ</p>
+                            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mt-1" id="statGrandTotal">0 ฿</h3>
+                        </div>
+                        <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600"><i class="fa-solid fa-wallet"></i></div>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left" id="mainTable">
-                        <thead>
-                            <tr class="text-slate-400 text-[11px] uppercase border-b border-slate-100">
-                                <th class="pb-4 px-2">รุ่นรถ</th>
-                                <th class="pb-4 px-2">ทะเบียน</th>
-                                <th class="pb-4 px-2">ลูกค้า</th>
-                                <th class="pb-4 px-2">วันเช่า-คืน</th>
-                                <th class="pb-4 px-2 text-center">จำนวนวัน</th>
-                                <th class="pb-4 px-2 text-right">ค่าเช่า</th>
-                                <th class="pb-4 px-2 text-right">มัดจำ</th>
-                                <th class="pb-4 px-2 text-center">สถานะ</th>
-                                <th class="pb-4 px-2 text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="text-sm">
-                            <!-- Data will appear here -->
-                        </tbody>
-                    </table>
+                <!-- 2. Rental Fee -->
+                <div class="glass-panel p-5 relative overflow-hidden group border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">ค่าเช่า (รวม)</p>
+                            <h3 class="text-xl md:text-2xl font-bold text-emerald-600 mt-1" id="statIncome">0 ฿</h3>
+                        </div>
+                        <div class="p-2 bg-emerald-50 rounded-lg text-emerald-500"><i class="fa-solid fa-coins"></i></div>
+                    </div>
+                </div>
+                <!-- 3. Deposit -->
+                <div class="glass-panel p-5 relative overflow-hidden group border-l-4 border-rose-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">เงินมัดจำ (ที่ถืออยู่)</p>
+                            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mt-1" id="statDeposit">0 ฿</h3>
+                        </div>
+                        <div class="p-2 bg-rose-50 rounded-lg text-rose-500"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    </div>
+                </div>
+                <!-- 4. Active -->
+                <div class="glass-panel p-5 relative overflow-hidden group border-l-4 border-amber-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">รถที่กำลังเช่าอยู่</p>
+                            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mt-1" id="statActive">0 คัน</h3>
+                        </div>
+                        <div class="p-2 bg-amber-50 rounded-lg text-amber-500"><i class="fa-solid fa-car-on"></i></div>
+                    </div>
+                </div>
+                <!-- 5. Total -->
+                <div class="glass-panel p-5 relative overflow-hidden group border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">จำนวนการเช่าทั้งหมด</p>
+                            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mt-1" id="statTotal">0 รายการ</h3>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-500"><i class="fa-solid fa-list-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts & Table -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Charts -->
+                <div class="glass-panel p-6">
+                    <h3 class="font-bold text-gray-700 mb-6 flex items-center"><i class="fa-solid fa-chart-pie mr-2 text-indigo-500"></i> สัดส่วนสถานะ</h3>
+                    <div class="relative h-64 w-full flex justify-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="glass-panel p-6 lg:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-6 flex items-center"><i class="fa-solid fa-chart-simple mr-2 text-emerald-500"></i> รายได้แยกตามรุ่นรถ</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Main Table -->
+                <div class="glass-panel p-6 lg:col-span-3 overflow-hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h3 class="text-lg font-bold text-gray-800 w-full md:w-auto flex items-center">
+                            <i class="fa-solid fa-table-list mr-2 text-slate-400"></i> รายการเช่าทั้งหมด
+                        </h3>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <div class="relative flex-1 md:w-72">
+                                <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="ค้นหาชื่อ, ทะเบียน..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition">
+                                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            <button onclick="exportExcel()" class="bg-emerald-50 text-emerald-600 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-100 transition border border-emerald-100 text-sm whitespace-nowrap shadow-sm">
+                                <i class="fa-solid fa-file-excel mr-2"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto rounded-xl border border-gray-100">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50/50 text-xs uppercase text-gray-500 font-bold tracking-wider">
+                                <tr class="border-b border-gray-100">
+                                    <th class="px-4 py-4 whitespace-nowrap">ลำดับ</th>
+                                    <th class="px-4 py-4 whitespace-nowrap">รุ่น</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">รถทะเบียน</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">สีรถ</th>
+                                    <th class="px-4 py-4 whitespace-nowrap">ลูกค้า</th>
+                                    <th class="px-4 py-4 whitespace-nowrap">เบอร์โทร</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">วันเช่า - วันคืน</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">จำนวนวัน</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">หมวก</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-right">ค่าเช่า(รวม)</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-right">มัดจำ</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-right">ยอดเงินรวม+บวกมัดจำ</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">สถานะ</th>
+                                    <th class="px-4 py-4 whitespace-nowrap text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="text-sm divide-y divide-gray-50 bg-white">
+                                <tr><td colspan="14" class="text-center py-10 text-gray-300 italic">กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div id="pagination" class="mt-4 flex justify-center gap-2"></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Settings Modal (Supabase Config) -->
-    <div id="settingsModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl">
-            <h3 class="text-lg font-bold mb-6 flex items-center"><i class="fa-solid fa-database mr-2 text-indigo-500"></i> ตั้งค่าการเชื่อมต่อ Cloud</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">SUPABASE URL</label>
-                    <input type="text" id="sbUrl" class="w-full bg-slate-50 border rounded-xl p-3 text-sm" placeholder="https://xxx.supabase.co">
+    <!-- Form Modal (Add/Edit) -->
+    <div id="formModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl p-4">
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in-down">
+                <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 id="modalTitle" class="text-xl font-bold text-gray-800 flex items-center">
+                        <i class="fa-solid fa-circle-plus text-indigo-600 mr-2"></i> รายละเอียด
+                    </h3>
+                    <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">SUPABASE ANON KEY</label>
-                    <input type="text" id="sbKey" class="w-full bg-slate-50 border rounded-xl p-3 text-sm" placeholder="eyJhbGciOiJIUzI1NiI...">
-                </div>
-            </div>
-            <div class="flex justify-end gap-3 mt-8">
-                <button onclick="toggleSettings()" class="text-slate-400 font-bold px-4">ยกเลิก</button>
-                <button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold">บันทึก</button>
+                
+                <form id="rentalForm" onsubmit="saveItem(event)" class="overflow-y-auto p-8 space-y-6">
+                    <input type="hidden" id="formId">
+                    
+                    <!-- Section 1 -->
+                    <div>
+                        <h4 class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4 border-b border-indigo-50 pb-2">ข้อมูลรถยนต์</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">รุ่นรถ</label>
+                                <input type="text" id="formModel" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">ทะเบียน</label>
+                                <input type="text" id="formPlate" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">สีรถ</label>
+                                <input type="text" id="formColor" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <div>
+                        <h4 class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4 border-b border-indigo-50 pb-2">ข้อมูลลูกค้า</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">ชื่อลูกค้า</label>
+                                <input type="text" id="formCustomer" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">เบอร์โทร</label>
+                                <input type="text" id="formPhone" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">หมวกกันน็อค</label>
+                                <input type="text" id="formHelmet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="ระบุจำนวน">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3 -->
+                    <div>
+                        <h4 class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4 border-b border-indigo-50 pb-2">รายละเอียดการเช่า</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">วันรับรถ</label>
+                                <input type="date" id="formStart" onchange="calcDays()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">วันคืนรถ</label>
+                                <input type="date" id="formEnd" onchange="calcDays()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">จำนวนวัน</label>
+                                <input type="number" id="formDuration" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-indigo-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">ค่าเช่า</label>
+                                <input type="number" id="formFee" oninput="calcTotal()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">มัดจำ</label>
+                                <input type="number" id="formDeposit" oninput="calcTotal()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">รวมสุทธิ</label>
+                                <input type="number" id="formTotal" readonly class="w-full bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5 text-sm font-bold text-indigo-700">
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">สถานะ</label>
+                                <div class="relative">
+                                    <select id="formStatus" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none appearance-none cursor-pointer">
+                                        <option value="กำลังเช่า">กำลังเช่า</option>
+                                        <option value="จอง">จอง</option>
+                                        <option value="คืนแล้ว">คืนแล้ว</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-xs text-gray-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-gray-100 flex justify-end gap-3">
+                        <button type="button" onclick="closeModal()" class="px-6 py-2.5 text-sm font-bold text-gray-400 hover:text-gray-600 transition">ยกเลิก</button>
+                        <button type="submit" class="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-100 transition transform hover:-translate-y-0.5">บันทึกข้อมูล</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- CRUD Modal -->
-    <div id="crudModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-4xl p-10 rounded-3xl shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-8 pb-4 border-b">
-                <h3 id="modalTitle" class="text-xl font-bold">รายละเอียดการเช่า</h3>
-                <button onclick="closeModal()" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-xmark text-2xl"></i></button>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="toggleSettings()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 animate-fade-in-down">
+                <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-database text-indigo-600 mr-2"></i> เชื่อมต่อ Supabase Cloud
+                </h3>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">SUPABASE URL</label>
+                        <input type="text" id="sbUrl" placeholder="https://xyz.supabase.co" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1.5 ml-1">SUPABASE KEY (Anon/Public)</label>
+                        <input type="password" id="sbKey" placeholder="eyJ..." class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50">
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl text-xs text-indigo-700 leading-relaxed">
+                        <i class="fa-solid fa-circle-info mr-1"></i> นำค่า URL และ Key มาจากหน้า Settings > API ในโปรเจกต์ Supabase ของคุณ
+                    </div>
+                    <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-2 transition">บันทึกการเชื่อมต่อ</button>
+                </div>
             </div>
-            <form id="crudForm" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <input type="hidden" id="formId">
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">รุ่นรถ</label><input type="text" id="formModel" required class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">ทะเบียน</label><input type="text" id="formPlate" required class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">สีรถ</label><input type="text" id="formColor" class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">ชื่อลูกค้า</label><input type="text" id="formCustomer" required class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">เบอร์โทร</label><input type="text" id="formPhone" required class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">หมวก</label><input type="text" id="formHelmet" class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">วันที่เช่า</label><input type="date" id="formStartDate" onchange="calcDuration()" class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">วันที่คืน</label><input type="date" id="formEndDate" onchange="calcDuration()" class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">จำนวนวัน</label><input type="number" id="formDuration" readonly class="w-full bg-gray-100 border p-3 rounded-xl text-sm"></div>
-
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">ค่าเช่า</label><input type="number" id="formRentalFee" oninput="calcTotal()" class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">มัดจำ</label><input type="number" id="formDeposit" oninput="calcTotal()" class="w-full bg-slate-50 border p-3 rounded-xl text-sm"></div>
-                <div><label class="block text-xs font-bold text-slate-500 mb-1">รวมเงิน</label><input type="number" id="formTotal" readonly class="w-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold p-3 rounded-xl text-sm"></div>
-                
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-bold text-slate-500 mb-1">สถานะ</label>
-                    <select id="formStatus" class="w-full bg-slate-50 border p-3 rounded-xl text-sm">
-                        <option value="กำลังเช่า">กำลังเช่า</option>
-                        <option value="คืนแล้ว">คืนแล้ว</option>
-                        <option value="จอง">จอง</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-3 pt-6 border-t flex justify-end gap-3">
-                    <button type="button" onclick="closeModal()" class="px-6 py-2 text-slate-400 font-bold">ยกเลิก</button>
-                    <button type="submit" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg">บันทึกข้อมูล</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <script>
+        // --- AUTH & INIT ---
         let supabaseClient = null;
-        let rawData = [];
+        let rentals = [];
         let charts = {};
 
-        // Authentication
+        function checkAuth() {
+            if(sessionStorage.getItem('auth') === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                initSupabase();
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('dashboardContent').classList.add('hidden');
+            }
+        }
+
         function handleLogin(e) {
             e.preventDefault();
-            if (document.getElementById('username').value === 'admin999' && document.getElementById('password').value === '0123456789') {
-                sessionStorage.setItem('isAuth', 'true');
-                initApp();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if(u === 'admin999' && p === '1234') {
+                sessionStorage.setItem('auth', 'true');
+                checkAuth();
             } else {
-                Swal.fire('Error', 'Username หรือ Password ไม่ถูกต้อง', 'error');
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Username/Password ผิดพลาด', confirmButtonColor: '#4f46e5' });
             }
         }
 
         function logout() {
-            sessionStorage.removeItem('isAuth');
+            sessionStorage.removeItem('auth');
             location.reload();
         }
 
-        // Initialize App
-        function initApp() {
-            if (sessionStorage.getItem('isAuth') !== 'true') return;
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('dashboardContent').classList.remove('hidden');
+        // --- SUPABASE LOGIC ---
+        function initSupabase() {
+            const url = localStorage.getItem('sb_url');
+            const key = localStorage.getItem('sb_key');
 
-            const savedUrl = localStorage.getItem('sbUrl');
-            const savedKey = localStorage.getItem('sbKey');
-            
-            if (savedUrl && savedKey) {
-                document.getElementById('sbUrl').value = savedUrl;
-                document.getElementById('sbKey').value = savedKey;
-                supabaseClient = supabase.createClient(savedUrl, savedKey);
-                fetchData();
+            if(url && key) {
+                try {
+                    supabaseClient = supabase.createClient(url, key);
+                    fetchData();
+                } catch(e) {
+                    Swal.fire('Config Error', 'การตั้งค่า URL ไม่ถูกต้อง', 'error');
+                    toggleSettings();
+                }
             } else {
                 toggleSettings();
             }
         }
 
-        // Database Operations
+        function toggleSettings() {
+            const m = document.getElementById('settingsModal');
+            m.classList.toggle('hidden');
+            if(!m.classList.contains('hidden')) {
+                document.getElementById('sbUrl').value = localStorage.getItem('sb_url') || '';
+                document.getElementById('sbKey').value = localStorage.getItem('sb_key') || '';
+            }
+        }
+
+        function saveSettings() {
+            const url = document.getElementById('sbUrl').value.trim();
+            const key = document.getElementById('sbKey').value.trim();
+            if(url && key) {
+                localStorage.setItem('sb_url', url);
+                localStorage.setItem('sb_key', key);
+                toggleSettings();
+                location.reload(); // Reload to re-init
+            }
+        }
+
         async function fetchData() {
-            if (!supabaseClient) return;
+            if(!supabaseClient) return;
             const btn = document.getElementById('refreshBtn');
-            btn.classList.add('opacity-50');
-            
+            const icon = btn.querySelector('i');
+            icon.classList.add('fa-spin');
+
             const { data, error } = await supabaseClient
                 .from('rentals')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้: ' + error.message, 'error');
+            icon.classList.remove('fa-spin');
+
+            if(error) {
+                console.error(error);
+                Swal.fire('Connection Error', 'ไม่สามารถดึงข้อมูลได้ (โปรดตรวจสอบ Key หรือ Table Name)', 'error');
             } else {
-                rawData = data;
-                updateUI();
+                rentals = data || [];
+                updateDashboard();
             }
-            btn.classList.remove('opacity-50');
         }
 
-        async function handleFormSubmit(e) {
+        // --- CRUD OPERATIONS ---
+        async function saveItem(e) {
             e.preventDefault();
             const id = document.getElementById('formId').value;
+            
             const payload = {
                 model: document.getElementById('formModel').value,
                 plate: document.getElementById('formPlate').value,
@@ -282,89 +513,132 @@
                 customer: document.getElementById('formCustomer').value,
                 phone: document.getElementById('formPhone').value,
                 helmet: document.getElementById('formHelmet').value,
-                start_date: document.getElementById('formStartDate').value,
-                end_date: document.getElementById('formEndDate').value,
+                start_date: document.getElementById('formStart').value,
+                end_date: document.getElementById('formEnd').value,
                 duration: parseInt(document.getElementById('formDuration').value) || 0,
-                rental_fee: parseFloat(document.getElementById('formRentalFee').value) || 0,
+                rental_fee: parseFloat(document.getElementById('formFee').value) || 0,
                 deposit: parseFloat(document.getElementById('formDeposit').value) || 0,
                 total: parseFloat(document.getElementById('formTotal').value) || 0,
                 status: document.getElementById('formStatus').value
             };
 
-            let res;
-            if (id) {
-                res = await supabaseClient.from('rentals').update(payload).eq('id', id);
-            } else {
-                res = await supabaseClient.from('rentals').insert([payload]);
+            let result;
+            if(id) { // Update
+                result = await supabaseClient.from('rentals').update(payload).eq('id', id);
+            } else { // Insert
+                result = await supabaseClient.from('rentals').insert([payload]);
             }
 
-            if (res.error) {
-                Swal.fire('Error', res.error.message, 'error');
+            if(result.error) {
+                Swal.fire('Error', result.error.message, 'error');
             } else {
-                Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1000, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false });
                 closeModal();
                 fetchData();
             }
         }
 
         async function deleteItem(id) {
-            const res = await Swal.fire({ title: 'ยืนยัน?', text: 'ลบข้อมูลถาวร?', icon: 'warning', showCancelButton: true });
-            if (res.isConfirmed) {
+            const res = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "ข้อมูลจะถูกลบถาวร",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ลบข้อมูล'
+            });
+
+            if(res.isConfirmed) {
                 const { error } = await supabaseClient.from('rentals').delete().eq('id', id);
-                if (error) Swal.fire('Error', error.message, 'error');
+                if(error) Swal.fire('Error', error.message, 'error');
                 else fetchData();
             }
         }
 
-        // UI Helpers
-        function updateUI() {
-            const income = rawData.reduce((a, b) => a + (b.rental_fee || 0), 0);
-            const deposit = rawData.reduce((a, b) => (b.status !== 'คืนแล้ว' ? a + (b.deposit || 0) : a), 0);
-            const active = rawData.filter(r => r.status === 'กำลังเช่า').length;
+        // --- UI & RENDER ---
+        function updateDashboard() {
+            // Stats
+            const income = rentals.reduce((sum, r) => sum + (r.rental_fee || 0), 0);
+            const deposit = rentals.filter(r => r.status !== 'คืนแล้ว').reduce((sum, r) => sum + (r.deposit || 0), 0);
+            const active = rentals.filter(r => ['กำลังเช่า', 'จอง'].includes(r.status)).length;
+            const grandTotal = income + deposit;
 
-            document.getElementById('netIncome').innerText = income.toLocaleString() + ' ฿';
-            document.getElementById('totalDeposit').innerText = deposit.toLocaleString() + ' ฿';
-            document.getElementById('activeRentals').innerText = active + ' คัน';
-            document.getElementById('totalTransactions').innerText = rawData.length;
+            document.getElementById('statGrandTotal').innerText = grandTotal.toLocaleString() + ' ฿';
+            document.getElementById('statIncome').innerText = income.toLocaleString() + ' ฿';
+            document.getElementById('statDeposit').innerText = deposit.toLocaleString() + ' ฿';
+            document.getElementById('statActive').innerText = active + ' คัน';
+            document.getElementById('statTotal').innerText = rentals.length + ' รายการ';
 
             renderTable();
             renderCharts();
+            checkNotifications();
+        }
+
+        function getColorCode(colorName) {
+            const colors = {
+                'แดง': '#ef4444', 'ดำ': '#1f2937', 'ขาว': '#ffffff', 'น้ำเงิน': '#3b82f6',
+                'เหลือง': '#eab308', 'เขียว': '#22c55e', 'เทา': '#6b7280', 'บรอนซ์': '#9ca3af',
+                'ส้ม': '#f97316', 'ชมพู': '#ec4899', 'ม่วง': '#a855f7', 'ฟ้า': '#06b6d4', 'ทอง': '#d97706'
+            };
+            return colors[colorName?.trim()] || '#cbd5e1';
         }
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            tbody.innerHTML = '';
-
-            const filtered = rawData.filter(r => 
-                (r.model + r.plate + r.customer).toLowerCase().includes(search)
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = rentals.filter(r => 
+                (r.model + r.plate + r.customer).toLowerCase().includes(term)
             );
 
-            filtered.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 border-b border-slate-50';
-                
-                let sClass = 'bg-gray-100 text-gray-600';
-                if (item.status === 'คืนแล้ว') sClass = 'bg-emerald-100 text-emerald-700';
-                if (item.status === 'กำลังเช่า') sClass = 'bg-amber-100 text-amber-700';
+            tbody.innerHTML = '';
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-10 text-gray-400">ไม่พบข้อมูล</td></tr>`;
+                return;
+            }
 
+            filtered.forEach((r, index) => {
+                let badgeClass = 'bg-gray-100 text-gray-600';
+                if(r.status === 'กำลังเช่า') badgeClass = 'bg-amber-100 text-amber-700';
+                if(r.status === 'คืนแล้ว') badgeClass = 'bg-emerald-100 text-emerald-700';
+                if(r.status === 'จอง') badgeClass = 'bg-indigo-100 text-indigo-700';
+
+                const colorCode = getColorCode(r.color);
+                const isWhite = colorCode === '#ffffff';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors border-b border-gray-50 last:border-0';
                 tr.innerHTML = `
-                    <td class="py-4 px-2 font-bold">${item.model}</td>
-                    <td class="py-4 px-2"><span class="license-plate">${item.plate}</span></td>
-                    <td class="py-4 px-2">${item.customer}</td>
-                    <td class="py-4 px-2">
-                        <div class="flex items-center gap-1">
-                            <span class="text-emerald-600 font-bold">${item.start_date || '-'}</span>
-                            <span class="text-rose-500 font-bold">${item.end_date || '-'}</span>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-400 font-medium">${index + 1}</td>
+                    <td class="px-4 py-4 whitespace-nowrap font-bold text-gray-700">${r.model}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center"><span class="license-plate">${r.plate}</span></td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-gray-600">
+                            <span class="color-dot" style="background-color: ${colorCode}; ${isWhite ? 'border: 1px solid #d1d5db;' : ''}"></span>${r.color}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap font-medium text-gray-800">${r.customer}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-gray-500 text-xs"><i class="fa-solid fa-phone mr-1"></i>${r.phone}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-xs">
+                        <div class="flex items-center justify-center gap-1">
+                            <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">${formatDate(r.start_date)}</span>
+                            <i class="fa-solid fa-arrow-right text-gray-300 text-[10px]"></i>
+                            <span class="text-rose-500 bg-rose-50 px-2 py-0.5 rounded">${formatDate(r.end_date)}</span>
                         </div>
                     </td>
-                    <td class="py-4 px-2 text-center font-bold">${item.duration} วัน</td>
-                    <td class="py-4 px-2 text-right font-bold">${(item.rental_fee || 0).toLocaleString()}</td>
-                    <td class="py-4 px-2 text-right font-bold text-rose-400">${(item.deposit || 0).toLocaleString()}</td>
-                    <td class="py-4 px-2 text-center"><span class="status-pill ${sClass}">${item.status}</span></td>
-                    <td class="py-4 px-2 text-center">
-                        <button onclick='openModal("edit", ${JSON.stringify(item)})' class="text-indigo-400 hover:text-indigo-600 mx-1"><i class="fa-solid fa-edit"></i></button>
-                        <button onclick="deleteItem('${item.id}')" class="text-rose-300 hover:text-rose-500 mx-1"><i class="fa-solid fa-trash"></i></button>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-indigo-600 font-bold bg-indigo-50/50">${r.duration} วัน</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500">${r.helmet}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right font-medium text-gray-700">${(r.rental_fee || 0).toLocaleString()}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right text-rose-500 font-medium">${(r.deposit || 0).toLocaleString()}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right font-bold text-indigo-900 bg-indigo-50/30">${(r.total || 0).toLocaleString()}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">${r.status}</span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick='openModal("edit", ${JSON.stringify(r)})' class="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteItem('${r.id}')" class="p-1.5 rounded-lg text-rose-300 hover:bg-rose-50 hover:text-rose-500 transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -372,94 +646,209 @@
         }
 
         function renderCharts() {
-            if (charts.rev) charts.rev.destroy();
-            if (charts.stat) charts.stat.destroy();
+            if(charts.rev) charts.rev.destroy();
+            if(charts.stat) charts.stat.destroy();
 
-            const stats = {};
-            const statuses = {};
-            rawData.forEach(r => {
-                stats[r.model] = (stats[r.model] || 0) + (r.rental_fee || 0);
-                statuses[r.status] = (statuses[r.status] || 0) + 1;
-            });
+            // Revenue Data
+            const revData = {};
+            rentals.forEach(r => revData[r.model] = (revData[r.model] || 0) + (r.rental_fee || 0));
 
             charts.rev = new Chart(document.getElementById('revenueChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(stats),
-                    datasets: [{ label: 'รายได้', data: Object.values(stats), backgroundColor: '#6366f1', borderRadius: 8 }]
+                    labels: Object.keys(revData),
+                    datasets: [{ label: 'รายได้', data: Object.values(revData), backgroundColor: '#6366f1', borderRadius: 6 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
+            // Status Data
+            const statData = { 'กำลังเช่า': 0, 'คืนแล้ว': 0, 'จอง': 0 };
+            rentals.forEach(r => { if(statData[r.status] !== undefined) statData[r.status]++ });
+
             charts.stat = new Chart(document.getElementById('statusChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(statuses),
-                    datasets: [{ data: Object.values(statuses), backgroundColor: ['#fbbf24', '#10b981', '#3b82f6'] }]
+                    labels: Object.keys(statData),
+                    datasets: [{ data: Object.values(statData), backgroundColor: ['#fbbf24', '#10b981', '#6366f1'], borderWidth: 0 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
             });
         }
 
-        // Logic Helpers
-        function calcDuration() {
-            const start = new Date(document.getElementById('formStartDate').value);
-            const end = new Date(document.getElementById('formEndDate').value);
-            if (!isNaN(start) && !isNaN(end)) {
-                const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        // --- UTILS ---
+        function openModal(mode, data = null) {
+            document.getElementById('formModal').classList.remove('hidden');
+            document.getElementById('rentalForm').reset();
+            document.getElementById('formId').value = '';
+            
+            const title = document.getElementById('modalTitle');
+            if(mode === 'add') {
+                title.innerHTML = '<i class="fa-solid fa-circle-plus text-emerald-500 mr-2"></i> เพิ่มรายการใหม่';
+                document.getElementById('formStart').valueAsDate = new Date();
+                const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
+                document.getElementById('formEnd').valueAsDate = tmr;
+                calcDays();
+            } else {
+                title.innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-500 mr-2"></i> แก้ไขข้อมูล';
+                // Fill form
+                document.getElementById('formId').value = data.id;
+                document.getElementById('formModel').value = data.model;
+                document.getElementById('formPlate').value = data.plate;
+                document.getElementById('formColor').value = data.color;
+                document.getElementById('formCustomer').value = data.customer;
+                document.getElementById('formPhone').value = data.phone;
+                document.getElementById('formHelmet').value = data.helmet;
+                document.getElementById('formStart').value = data.start_date;
+                document.getElementById('formEnd').value = data.end_date;
+                document.getElementById('formDuration').value = data.duration;
+                document.getElementById('formFee').value = data.rental_fee;
+                document.getElementById('formDeposit').value = data.deposit;
+                document.getElementById('formTotal').value = data.total;
+                document.getElementById('formStatus').value = data.status;
+            }
+        }
+
+        function closeModal() { document.getElementById('formModal').classList.add('hidden'); }
+        
+        function calcDays() {
+            const s = new Date(document.getElementById('formStart').value);
+            const e = new Date(document.getElementById('formEnd').value);
+            if(!isNaN(s) && !isNaN(e)) {
+                const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24));
                 document.getElementById('formDuration').value = diff > 0 ? diff : 1;
             }
         }
 
         function calcTotal() {
-            const fee = parseFloat(document.getElementById('formRentalFee').value) || 0;
-            const dep = parseFloat(document.getElementById('formDeposit').value) || 0;
-            document.getElementById('formTotal').value = fee + dep;
+            const f = parseFloat(document.getElementById('formFee').value) || 0;
+            const d = parseFloat(document.getElementById('formDeposit').value) || 0;
+            document.getElementById('formTotal').value = f + d;
         }
 
-        function openModal(mode, item = null) {
-            document.getElementById('crudModal').classList.remove('hidden');
-            document.getElementById('crudForm').reset();
-            document.getElementById('formId').value = "";
-            document.getElementById('modalTitle').innerText = mode === 'add' ? "เพิ่มรายการใหม่" : "แก้ไขข้อมูลการเช่า";
+        function formatDate(d) {
+            if(!d) return '-';
+            const [y, m, day] = d.split('-');
+            return `${day}/${m}/${y.slice(2)}`;
+        }
 
-            if (item) {
-                document.getElementById('formId').value = item.id;
-                document.getElementById('formModel').value = item.model;
-                document.getElementById('formPlate').value = item.plate;
-                document.getElementById('formColor').value = item.color;
-                document.getElementById('formCustomer').value = item.customer;
-                document.getElementById('formPhone').value = item.phone;
-                document.getElementById('formHelmet').value = item.helmet;
-                document.getElementById('formStartDate').value = item.start_date;
-                document.getElementById('formEndDate').value = item.end_date;
-                document.getElementById('formDuration').value = item.duration;
-                document.getElementById('formRentalFee').value = item.rental_fee;
-                document.getElementById('formDeposit').value = item.deposit;
-                document.getElementById('formTotal').value = item.total;
-                document.getElementById('formStatus').value = item.status;
+        function checkNotifications() {
+            const list = document.getElementById('notificationList');
+            const badge = document.getElementById('notifyBadge');
+            const ping = document.getElementById('notifyPing');
+            const today = new Date().toISOString().split('T')[0];
+            
+            list.innerHTML = '';
+            let count = 0;
+
+            rentals.forEach(r => {
+                if((r.status === 'กำลังเช่า' || r.status === 'จอง') && r.end_date <= today) {
+                    count++;
+                    const isToday = r.end_date === today;
+                    const div = document.createElement('div');
+                    div.className = `p-3 border-b border-gray-100 ${isToday ? 'bg-orange-50' : 'bg-red-50'}`;
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-xs font-bold ${isToday ? 'text-orange-700' : 'text-red-700'}">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i> ${isToday ? 'ครบกำหนดวันนี้' : 'เกินกำหนดคืน'}
+                                </div>
+                                <div class="text-sm font-bold text-gray-700 mt-1">${r.model} (${r.plate})</div>
+                                <div class="text-xs text-gray-500">${r.customer} - ${r.phone}</div>
+                            </div>
+                            <div class="text-xs font-mono bg-white px-2 py-1 rounded border border-gray-200">${formatDate(r.end_date)}</div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+
+            document.getElementById('notifyDate').innerText = new Date().toLocaleDateString('th-TH');
+            if(count > 0) {
+                badge.classList.remove('hidden');
+                ping.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                ping.classList.add('hidden');
+                list.innerHTML = '<div class="p-4 text-center text-xs text-gray-400">ไม่มีรายการแจ้งเตือน</div>';
             }
         }
 
-        function closeModal() { document.getElementById('crudModal').classList.add('hidden'); }
-        function toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); }
-
-        function saveSettings() {
-            const url = document.getElementById('sbUrl').value;
-            const key = document.getElementById('sbKey').value;
-            localStorage.setItem('sbUrl', url);
-            localStorage.setItem('sbKey', key);
-            location.reload();
+        function toggleNotifications() {
+            document.getElementById('notificationDropdown').classList.toggle('hidden');
         }
 
         function exportExcel() {
-            const ws = XLSX.utils.json_to_sheet(rawData);
+            if(!rentals.length) return Swal.fire('No Data', 'ไม่มีข้อมูลให้ Export', 'warning');
+
+            // 1. Raw Data Sheet (ข้อมูลดิบ)
+            const ws_raw = XLSX.utils.json_to_sheet(rentals);
+
+            // 2. Process Weekly Summary (คำนวณรายรับรายสัปดาห์)
+            const weeklyData = {};
+
+            rentals.forEach(r => {
+                if (!r.start_date || r.start_date === '-') return;
+                
+                const date = new Date(r.start_date);
+                if (isNaN(date)) return;
+
+                // หาวันจันทร์ของสัปดาห์นั้นเพื่อใช้เป็น Key
+                const day = date.getDay();
+                const diff = date.getDate() - day + (day === 0 ? -6 : 1); // ถ้าวันอาทิตย์ให้ถอยไป 6 วัน
+                const monday = new Date(date.setDate(diff));
+                const weekKey = monday.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+                if (!weeklyData[weekKey]) {
+                    weeklyData[weekKey] = {
+                        'สัปดาห์ (เริ่มวันจันทร์)': weekKey,
+                        'จำนวนรายการ': 0,
+                        'ค่าเช่ารวม': 0,
+                        'มัดจำรวม': 0,
+                        'ยอดรวมสุทธิ': 0
+                    };
+                }
+
+                weeklyData[weekKey]['จำนวนรายการ']++;
+                weeklyData[weekKey]['ค่าเช่ารวม'] += (r.rental_fee || 0);
+                weeklyData[weekKey]['มัดจำรวม'] += (r.deposit || 0);
+                weeklyData[weekKey]['ยอดรวมสุทธิ'] += (r.total || 0);
+            });
+
+            // แปลง Object เป็น Array แล้วเรียงวันที่ล่าสุดขึ้นก่อน
+            const summaryArray = Object.values(weeklyData).sort((a, b) => 
+                new Date(b['สัปดาห์ (เริ่มวันจันทร์)']) - new Date(a['สัปดาห์ (เริ่มวันจันทร์)'])
+            );
+
+            // คำนวณยอดรวมทั้งหมด (Grand Total) บรรทัดสุดท้าย
+            if(summaryArray.length > 0) {
+                const grandTotal = summaryArray.reduce((acc, curr) => {
+                    acc['จำนวนรายการ'] += curr['จำนวนรายการ'];
+                    acc['ค่าเช่ารวม'] += curr['ค่าเช่ารวม'];
+                    acc['มัดจำรวม'] += curr['มัดจำรวม'];
+                    acc['ยอดรวมสุทธิ'] += curr['ยอดรวมสุทธิ'];
+                    return acc;
+                }, {
+                    'สัปดาห์ (เริ่มวันจันทร์)': 'รวมทั้งหมด (Grand Total)',
+                    'จำนวนรายการ': 0,
+                    'ค่าเช่ารวม': 0,
+                    'มัดจำรวม': 0,
+                    'ยอดรวมสุทธิ': 0
+                });
+                summaryArray.push(grandTotal);
+            }
+
+            const ws_summary = XLSX.utils.json_to_sheet(summaryArray);
+
+            // สร้าง Workbook และเพิ่มทั้ง 2 แผ่นงาน
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "RentalData");
-            XLSX.writeFile(wb, "Rental_Export.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws_raw, "ข้อมูลดิบ (Raw Data)");
+            XLSX.utils.book_append_sheet(wb, ws_summary, "สรุปรายสัปดาห์ (Weekly)");
+
+            XLSX.writeFile(wb, `Rental_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
 
-        window.onload = initApp;
+        window.onload = checkAuth;
     </script>
 </body>
 </html>
