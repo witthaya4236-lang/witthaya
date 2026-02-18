@@ -27,7 +27,7 @@
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -69,7 +69,7 @@
 <body class="text-gray-700 antialiased relative">
 
     <!-- Login Screen -->
-    <div id="loginScreen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-100">
+    <div id="loginScreen" class="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-100">
         <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-sm mx-4 animate-fade-in-down border border-white">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 text-white mb-4 shadow-lg shadow-indigo-200">
@@ -98,7 +98,7 @@
     <div id="dashboardContent" class="hidden min-h-screen pb-20 md:pb-10">
         
         <!-- Navbar -->
-        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200">
+        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200 shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center">
                     <div class="flex items-center">
@@ -121,35 +121,13 @@
                             <i class="fa-solid fa-database text-lg"></i>
                         </button>
 
-                        <!-- Notification -->
+                        <!-- Notification Button -->
                         <div class="relative">
-                            <button onclick="toggleNotifications()" class="p-2 text-gray-400 hover:text-indigo-600 transition rounded-lg hover:bg-gray-50 relative">
+                            <button onclick="toggleNotifications()" class="p-2 text-gray-400 hover:text-indigo-600 transition rounded-lg hover:bg-gray-50 relative z-50">
                                 <i class="fa-solid fa-bell text-lg"></i>
                                 <span id="notifyBadge" class="hidden absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
                                 <span id="notifyPing" class="hidden absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-400 animate-ping-slow"></span>
                             </button>
-                            
-                            <!-- Dropdown: Responsive Styles -->
-                            <!-- Mobile: Fixed Full Screen below navbar | Desktop: Absolute Dropdown -->
-                            <div id="notificationDropdown" class="hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-white md:absolute md:inset-auto md:right-0 md:top-full md:mt-3 md:w-96 md:bottom-auto md:rounded-2xl md:shadow-2xl md:border md:border-gray-100 overflow-hidden flex flex-col transform origin-top-right transition-all">
-                                
-                                <!-- Header -->
-                                <div class="px-5 py-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm md:shadow-none flex-shrink-0">
-                                    <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                                        <i class="fa-solid fa-bell text-indigo-500"></i> แจ้งเตือนคืนรถ
-                                    </h3>
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-xs text-gray-400 font-medium" id="notifyDate"></span>
-                                        <!-- Close Button (Mobile Only) -->
-                                        <button onclick="toggleNotifications()" class="md:hidden text-slate-400 hover:text-slate-600 p-1">
-                                            <i class="fa-solid fa-xmark text-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- List Container -->
-                                <div id="notificationList" class="flex-1 overflow-y-auto bg-slate-50 md:bg-white p-0 md:max-h-[400px]"></div>
-                            </div>
                         </div>
 
                         <!-- Refresh -->
@@ -296,8 +274,39 @@
         <i class="fa-solid fa-plus text-2xl"></i>
     </button>
 
+    <!-- Notification Overlay (Background) -->
+    <div id="notificationOverlay" class="hidden fixed inset-0 z-[1999] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleNotifications()"></div>
+
+    <!-- Notification Dropdown (Floating Card) -->
+    <div id="notificationDropdown" class="hidden fixed top-20 left-4 right-4 z-[2000] max-h-[80vh] bg-white flex flex-col rounded-2xl shadow-2xl border border-gray-100 md:fixed md:inset-auto md:top-20 md:right-4 md:w-[400px] md:h-auto md:max-h-[600px] transform origin-top-right transition-all">
+        
+        <!-- Header -->
+        <div class="px-6 py-5 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm flex-shrink-0 rounded-t-2xl">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-indigo-500"></i> แจ้งเตือนคืนรถ
+                </h3>
+                <div class="text-xs text-gray-400 mt-0.5" id="notifyDate"></div>
+            </div>
+            <button onclick="toggleNotifications()" class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-red-500 transition shadow-sm">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- List Container -->
+        <div id="notificationList" class="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-3 md:max-h-[500px] rounded-b-2xl">
+            <!-- Dynamic Content Here -->
+            <div class="flex flex-col items-center justify-center py-12 text-slate-300">
+                <div class="bg-white p-4 rounded-full mb-3 shadow-sm border border-slate-100">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-200"></i>
+                </div>
+                <span class="text-sm font-medium">กำลังโหลดข้อมูล...</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Form Modal (Add/Edit) -->
-    <div id="formModal" class="fixed inset-0 z-50 hidden">
+    <div id="formModal" class="fixed inset-0 z-[1000] hidden">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl p-4">
             <div class="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in-down">
@@ -416,7 +425,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 z-[60] hidden">
+    <div id="settingsModal" class="fixed inset-0 z-[1000] hidden">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="toggleSettings()"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
             <div class="bg-white rounded-3xl shadow-2xl p-8 animate-fade-in-down">
@@ -442,7 +451,7 @@
     </div>
 
     <script>
-        // --- CONSTANTS ---
+        // --- HARDCODED CREDENTIALS (AUTO CONNECT) ---
         const CONFIG = {
             URL: 'https://yyiwyxhzposezwkvbcci.supabase.co',
             KEY: 'sb_publishable_wEZydpOBx6p0tWwikplUYw_-OBrj9y8'
@@ -511,7 +520,6 @@
             const m = document.getElementById('settingsModal');
             m.classList.toggle('hidden');
             if(!m.classList.contains('hidden')) {
-                // Pre-fill with existing or config
                 document.getElementById('sbUrl').value = localStorage.getItem('sb_url') || CONFIG.URL;
                 document.getElementById('sbKey').value = localStorage.getItem('sb_key') || CONFIG.KEY;
             }
@@ -613,19 +621,12 @@
 
         // --- UI & RENDER ---
         function updateDashboard() {
-            // 1. รายได้ค่าเช่า (รวมทั้งหมด)
+            // Stats
             const income = rentals.reduce((sum, r) => sum + (r.rental_fee || 0), 0);
-            
-            // 2. เงินมัดจำ (ที่ถืออยู่) - เฉพาะที่ยังไม่คืน
             const depositHeld = rentals.filter(r => r.status !== 'คืนแล้ว').reduce((sum, r) => sum + (r.deposit || 0), 0);
-            
-            // 3. ค่าเช่า+มัดจำ (รวมทั้งหมด) - ตามโจทย์: เอาค่ารวมทั้งหมดแม้คืนแล้ว
             const grandTotal = rentals.reduce((sum, r) => sum + (r.rental_fee || 0) + (r.deposit || 0), 0);
-
-            // 4. จำนวนรถที่กำลังเช่า
             const active = rentals.filter(r => ['กำลังเช่า', 'จอง'].includes(r.status)).length;
 
-            // อัปเดตตัวเลขใน Dashboard
             document.getElementById('statGrandTotal').innerText = grandTotal.toLocaleString() + ' ฿';
             document.getElementById('statIncome').innerText = income.toLocaleString() + ' ฿';
             document.getElementById('statDeposit').innerText = depositHeld.toLocaleString() + ' ฿';
@@ -656,7 +657,7 @@
 
             tbody.innerHTML = '';
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-10 text-gray-400">ไม่พบข้อมูล</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-gray-400">ไม่พบข้อมูล</td></tr>`;
                 return;
             }
 
@@ -713,7 +714,6 @@
             if(charts.rev) charts.rev.destroy();
             if(charts.stat) charts.stat.destroy();
 
-            // Revenue Data
             const revData = {};
             rentals.forEach(r => revData[r.model] = (revData[r.model] || 0) + (r.rental_fee || 0));
 
@@ -726,7 +726,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // Status Data
             const statData = { 'กำลังเช่า': 0, 'คืนแล้ว': 0, 'จอง': 0 };
             rentals.forEach(r => { if(statData[r.status] !== undefined) statData[r.status]++ });
 
@@ -850,79 +849,104 @@
             return `${day}/${m}/${y.slice(2)}`;
         }
 
+        // Robust Date Parser
+        function parseDateRobust(dateStr) {
+            if(!dateStr) return null;
+            let d = new Date(dateStr); // Try standard
+            if(!isNaN(d.getTime())) return d;
+            
+            // Try Thai format DD/MM/YYYY
+            const parts = dateStr.split('/');
+            if(parts.length === 3) {
+                let y = parseInt(parts[2]);
+                const m = parseInt(parts[1]) - 1;
+                const day = parseInt(parts[0]);
+                if(y < 100) y += 2000;
+                else if(y > 2400) y -= 543; // Convert BE
+                
+                d = new Date(y, m, day);
+                if(!isNaN(d.getTime())) return d;
+            }
+            return null;
+        }
+
         function checkNotifications() {
             const list = document.getElementById('notificationList');
             const badge = document.getElementById('notifyBadge');
             const ping = document.getElementById('notifyPing');
+            
+            // Current Date (Midnight)
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            // Reset & Init
             list.innerHTML = '';
             let count = 0;
 
-            // Sort rentals: Earliest due date first
-            const sortedRentals = [...rentals].sort((a, b) => new Date(a.end_date) - new Date(b.end_date));
+            const sortedRentals = [...rentals].sort((a, b) => {
+                const dateA = parseDateRobust(a.end_date) || new Date(9999,0,1);
+                const dateB = parseDateRobust(b.end_date) || new Date(9999,0,1);
+                return dateA - dateB;
+            });
 
             sortedRentals.forEach(r => {
                 if((r.status === 'กำลังเช่า' || r.status === 'จอง') && r.end_date) {
-                    const endDate = new Date(r.end_date);
+                    const endDate = parseDateRobust(r.end_date);
+                    if(!endDate) return;
                     endDate.setHours(0,0,0,0);
                     
                     const diffTime = endDate - today;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     
                     let htmlItem = '';
+                    const displayDate = formatDate(r.end_date);
 
                     if (diffDays < 0) {
-                        // Overdue (Red)
+                        // Overdue (Red Theme like Image 2)
                         count++;
                         const overdueDays = Math.abs(diffDays);
                         htmlItem = `
-                            <div class="p-4 border-b border-red-100 bg-red-50/50 hover:bg-red-50 transition-colors">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1 pr-3">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <i class="fa-solid fa-circle-exclamation text-red-600 text-lg"></i>
-                                            <span class="text-red-700 font-bold text-sm">เกินกำหนด ${overdueDays} วัน</span>
+                            <div class="p-4 border-b border-red-100 bg-[#FFF5F5]">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex-1 pr-2">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <i class="fa-solid fa-circle-exclamation text-[#D92D20] text-xl"></i> 
+                                            <span class="text-[#D92D20] font-bold text-base">เกินกำหนด ${overdueDays} วัน</span>
                                         </div>
-                                        <div class="text-slate-700 text-sm font-bold mb-1 flex items-center">
-                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i>
-                                            ${r.model} <span class="text-slate-500 font-normal ml-1">(${r.plate})</span>
+                                        <div class="text-slate-700 font-bold text-sm mb-0.5 flex items-center">
+                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${r.model} (${r.plate})
                                         </div>
                                         <div class="text-slate-500 text-xs flex items-center">
                                             <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${r.customer}
                                         </div>
                                     </div>
-                                    <div class="flex flex-col items-center justify-center border border-red-400 rounded-lg bg-white px-2 py-1.5 min-w-[80px] shadow-sm">
-                                        <span class="text-[9px] text-red-500 font-bold mb-0.5 uppercase tracking-wide">กำหนดคืน</span>
-                                        <span class="text-red-700 font-bold text-sm">${formatDate(r.end_date)}</span>
+                                    <div class="flex flex-col items-center justify-center bg-white border border-[#D92D20] rounded-lg px-2 py-1.5 min-w-[90px] shadow-sm">
+                                        <span class="text-[10px] text-[#D92D20] font-medium mb-0.5">กำหนดคืน</span>
+                                        <span class="text-[#D92D20] font-bold text-sm">${displayDate}</span>
                                     </div>
                                 </div>
                             </div>
                         `;
                     } else if (diffDays === 0) {
-                        // Due Today (Orange)
+                        // Due Today (Orange/Brown Theme like Image 2)
                         count++;
                         htmlItem = `
-                            <div class="p-4 border-b border-orange-100 bg-orange-50/50 hover:bg-orange-50 transition-colors">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1 pr-3">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <i class="fa-solid fa-bell text-orange-500 text-lg"></i>
-                                            <span class="text-orange-600 font-bold text-sm">ครบกำหนดคืนวันนี้</span>
+                            <div class="p-4 border-b border-amber-100 bg-[#FFFAEB]">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex-1 pr-2">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <i class="fa-solid fa-bell text-[#B54708] text-xl"></i> 
+                                            <span class="text-[#B54708] font-bold text-base">ครบกำหนดคืนวันนี้</span>
                                         </div>
-                                        <div class="text-slate-700 text-sm font-bold mb-1 flex items-center">
-                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i>
-                                            ${r.model} <span class="text-slate-500 font-normal ml-1">(${r.plate})</span>
+                                        <div class="text-slate-700 font-bold text-sm mb-0.5 flex items-center">
+                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${r.model} (${r.plate})
                                         </div>
                                         <div class="text-slate-500 text-xs flex items-center">
                                             <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${r.customer}
                                         </div>
                                     </div>
-                                    <div class="flex flex-col items-center justify-center border border-orange-400 rounded-lg bg-white px-2 py-1.5 min-w-[80px] shadow-sm">
-                                        <span class="text-[9px] text-orange-500 font-bold mb-0.5 uppercase tracking-wide">กำหนดคืน</span>
-                                        <span class="text-orange-700 font-bold text-sm">${formatDate(r.end_date)}</span>
+                                    <div class="flex flex-col items-center justify-center bg-white border border-[#B54708] rounded-lg px-2 py-1.5 min-w-[90px] shadow-sm">
+                                        <span class="text-[10px] text-[#B54708] font-medium mb-0.5">กำหนดคืน</span>
+                                        <span class="text-[#B54708] font-bold text-sm">${displayDate}</span>
                                     </div>
                                 </div>
                             </div>
@@ -933,7 +957,7 @@
                 }
             });
 
-            // Update Header Date
+            // Update Header Date (Right side)
             document.getElementById('notifyDate').innerText = new Date().toLocaleDateString('th-TH', { 
                 day: 'numeric', month: 'numeric', year: 'numeric' 
             });
@@ -945,40 +969,40 @@
                 badge.classList.add('hidden');
                 ping.classList.add('hidden');
                 list.innerHTML = `
-                    <div class="p-8 text-center flex flex-col items-center justify-center text-slate-300">
-                        <div class="bg-slate-50 p-4 rounded-full mb-3">
-                            <i class="fa-regular fa-calendar-check text-2xl text-slate-300"></i>
+                    <div class="flex flex-col items-center justify-center py-16 text-slate-300">
+                        <div class="bg-slate-50 p-6 rounded-full mb-4 shadow-sm">
+                            <i class="fa-regular fa-calendar-check text-4xl text-slate-300"></i>
                         </div>
-                        <span class="text-xs font-medium">ไม่มีรายการแจ้งเตือน</span>
+                        <span class="text-sm font-medium">ไม่มีรายการแจ้งเตือน</span>
                     </div>
                 `;
             }
         }
 
         function toggleNotifications() {
-            document.getElementById('notificationDropdown').classList.toggle('hidden');
+            const dropdown = document.getElementById('notificationDropdown');
+            const overlay = document.getElementById('notificationOverlay');
+            
+            if (dropdown) dropdown.classList.toggle('hidden');
+            if (overlay) overlay.classList.toggle('hidden');
         }
 
         function exportExcel() {
             if(!rentals.length) return Swal.fire('No Data', 'ไม่มีข้อมูลให้ Export', 'warning');
 
-            // 1. Raw Data Sheet (ข้อมูลดิบ)
             const ws_raw = XLSX.utils.json_to_sheet(rentals);
-
-            // 2. Process Weekly Summary (คำนวณรายรับรายสัปดาห์)
             const weeklyData = {};
 
             rentals.forEach(r => {
                 if (!r.start_date || r.start_date === '-') return;
                 
-                const date = new Date(r.start_date);
-                if (isNaN(date)) return;
+                const date = parseDateRobust(r.start_date);
+                if (!date) return;
 
-                // หาวันจันทร์ของสัปดาห์นั้นเพื่อใช้เป็น Key
                 const day = date.getDay();
-                const diff = date.getDate() - day + (day === 0 ? -6 : 1); // ถ้าวันอาทิตย์ให้ถอยไป 6 วัน
+                const diff = date.getDate() - day + (day === 0 ? -6 : 1);
                 const monday = new Date(date.setDate(diff));
-                const weekKey = monday.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                const weekKey = monday.toISOString().split('T')[0];
 
                 if (!weeklyData[weekKey]) {
                     weeklyData[weekKey] = {
@@ -996,12 +1020,10 @@
                 weeklyData[weekKey]['ยอดรวมสุทธิ'] += (r.total || 0);
             });
 
-            // แปลง Object เป็น Array แล้วเรียงวันที่ล่าสุดขึ้นก่อน
             const summaryArray = Object.values(weeklyData).sort((a, b) => 
                 new Date(b['สัปดาห์ (เริ่มวันจันทร์)']) - new Date(a['สัปดาห์ (เริ่มวันจันทร์)'])
             );
 
-            // คำนวณยอดรวมทั้งหมด (Grand Total) บรรทัดสุดท้าย
             if(summaryArray.length > 0) {
                 const grandTotal = summaryArray.reduce((acc, curr) => {
                     acc['จำนวนรายการ'] += curr['จำนวนรายการ'];
@@ -1020,8 +1042,6 @@
             }
 
             const ws_summary = XLSX.utils.json_to_sheet(summaryArray);
-
-            // สร้าง Workbook และเพิ่มทั้ง 2 แผ่นงาน
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws_raw, "ข้อมูลดิบ (Raw Data)");
             XLSX.utils.book_append_sheet(wb, ws_summary, "สรุปรายสัปดาห์ (Weekly)");
