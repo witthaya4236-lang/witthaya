@@ -128,13 +128,27 @@
                                 <span id="notifyBadge" class="hidden absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
                                 <span id="notifyPing" class="hidden absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-400 animate-ping-slow"></span>
                             </button>
-                            <!-- Dropdown -->
-                            <div id="notificationDropdown" class="hidden absolute right-0 mt-3 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 transform origin-top-right transition-all">
-                                <div class="px-5 py-4 bg-white border-b border-gray-100 flex justify-between items-center">
-                                    <h3 class="text-sm font-bold text-gray-700">แจ้งเตือนคืนรถ</h3>
-                                    <span class="text-xs text-gray-400 font-medium" id="notifyDate"></span>
+                            
+                            <!-- Dropdown: Responsive Styles -->
+                            <!-- Mobile: Fixed Full Screen below navbar | Desktop: Absolute Dropdown -->
+                            <div id="notificationDropdown" class="hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-white md:absolute md:inset-auto md:right-0 md:top-full md:mt-3 md:w-96 md:bottom-auto md:rounded-2xl md:shadow-2xl md:border md:border-gray-100 overflow-hidden flex flex-col transform origin-top-right transition-all">
+                                
+                                <!-- Header -->
+                                <div class="px-5 py-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm md:shadow-none flex-shrink-0">
+                                    <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                        <i class="fa-solid fa-bell text-indigo-500"></i> แจ้งเตือนคืนรถ
+                                    </h3>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs text-gray-400 font-medium" id="notifyDate"></span>
+                                        <!-- Close Button (Mobile Only) -->
+                                        <button onclick="toggleNotifications()" class="md:hidden text-slate-400 hover:text-slate-600 p-1">
+                                            <i class="fa-solid fa-xmark text-lg"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div id="notificationList" class="max-h-[60vh] md:max-h-[400px] overflow-y-auto"></div>
+
+                                <!-- List Container -->
+                                <div id="notificationList" class="flex-1 overflow-y-auto bg-slate-50 md:bg-white p-0 md:max-h-[400px]"></div>
                             </div>
                         </div>
 
