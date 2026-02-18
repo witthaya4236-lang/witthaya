@@ -457,6 +457,18 @@
             KEY: 'sb_publishable_wEZydpOBx6p0tWwikplUYw_-OBrj9y8'
         };
 
+        // --- SECURITY: XSS Prevention Helper ---
+        // แปลงตัวอักษรพิเศษเป็น HTML Entities เพื่อป้องกันการรันสคริปต์อันตราย
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         // --- AUTH & INIT ---
         let supabaseClient = null;
         let rentals = [];
@@ -672,17 +684,19 @@
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50 transition-colors border-b border-gray-50 last:border-0';
+                
+                // ปรับปรุงการแสดงผลโดยใช้ escapeHTML ป้องกัน XSS
                 tr.innerHTML = `
                     <td class="px-4 py-4 whitespace-nowrap text-center text-gray-400 font-medium">${index + 1}</td>
-                    <td class="px-4 py-4 whitespace-nowrap font-bold text-gray-700">${r.model}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-center"><span class="license-plate">${r.plate}</span></td>
+                    <td class="px-4 py-4 whitespace-nowrap font-bold text-gray-700">${escapeHTML(r.model)}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center"><span class="license-plate">${escapeHTML(r.plate)}</span></td>
                     <td class="px-4 py-4 whitespace-nowrap text-center">
                         <span class="inline-flex items-center px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-gray-600">
-                            <span class="color-dot" style="background-color: ${colorCode}; ${isWhite ? 'border: 1px solid #d1d5db;' : ''}"></span>${r.color}
+                            <span class="color-dot" style="background-color: ${colorCode}; ${isWhite ? 'border: 1px solid #d1d5db;' : ''}"></span>${escapeHTML(r.color)}
                         </span>
                     </td>
-                    <td class="px-4 py-4 whitespace-nowrap font-medium text-gray-800">${r.customer}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500 text-xs"><i class="fa-solid fa-phone mr-1"></i>${r.phone}</td>
+                    <td class="px-4 py-4 whitespace-nowrap font-medium text-gray-800">${escapeHTML(r.customer)}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500 text-xs"><i class="fa-solid fa-phone mr-1"></i>${escapeHTML(r.phone)}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-center text-xs">
                         <div class="flex items-center justify-center gap-1">
                             <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">${formatDate(r.start_date)}</span>
@@ -691,18 +705,22 @@
                         </div>
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap text-center text-indigo-600 font-bold">${r.duration} วัน</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500">${r.helmet}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500">${escapeHTML(r.helmet)}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-center font-medium text-gray-700">${(r.rental_fee || 0).toLocaleString()}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-center text-rose-500 font-medium">${(r.deposit || 0).toLocaleString()}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-center font-bold text-indigo-900">${(r.total || 0).toLocaleString()}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500 text-xs max-w-[150px] truncate" title="${r.remark || ''}">${r.remark || '-'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-center text-gray-500 text-xs max-w-[150px] truncate" title="${escapeHTML(r.remark || '')}">${escapeHTML(r.remark || '-')}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-center">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">${r.status}</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">${escapeHTML(r.status)}</span>
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap text-center">
                         <div class="flex items-center justify-center gap-1">
-                            <button onclick='openModal("edit", ${JSON.stringify(r)})' class="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteItem('${r.id}')" class="p-1.5 rounded-lg text-rose-300 hover:bg-rose-50 hover:text-rose-500 transition"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick='openModal("edit", ${JSON.stringify(r).replace(/'/g, "\\'")})' class="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteItem('${r.id}')" class="p-1.5 rounded-lg text-rose-300 hover:bg-rose-50 hover:text-rose-500 transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </div>
                     </td>
                 `;
@@ -720,7 +738,7 @@
             charts.rev = new Chart(document.getElementById('revenueChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(revData),
+                    labels: Object.keys(revData).map(label => escapeHTML(label)),
                     datasets: [{ label: 'รายได้', data: Object.values(revData), backgroundColor: '#6366f1', borderRadius: 6 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
@@ -765,7 +783,7 @@
                 calcDays();
             } else {
                 title.innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-500 mr-2"></i> แก้ไขข้อมูล';
-                // Fill form
+                // Fill form (ค่าที่ใส่ใน input ตรงๆ จะถูกมองเป็น text ธรรมดาโดยเบราว์เซอร์อยู่แล้ว)
                 document.getElementById('formId').value = data.id;
                 document.getElementById('formModel').value = data.model;
                 document.getElementById('formPlate').value = data.plate;
@@ -901,7 +919,7 @@
                     const displayDate = formatDate(r.end_date);
 
                     if (diffDays < 0) {
-                        // Overdue (Red Theme like Image 2)
+                        // Overdue (Red Theme)
                         count++;
                         const overdueDays = Math.abs(diffDays);
                         htmlItem = `
@@ -913,10 +931,10 @@
                                             <span class="text-[#D92D20] font-bold text-base">เกินกำหนด ${overdueDays} วัน</span>
                                         </div>
                                         <div class="text-slate-700 font-bold text-sm mb-0.5 flex items-center">
-                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${r.model} (${r.plate})
+                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${escapeHTML(r.model)} (${escapeHTML(r.plate)})
                                         </div>
                                         <div class="text-slate-500 text-xs flex items-center">
-                                            <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${r.customer}
+                                            <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${escapeHTML(r.customer)}
                                         </div>
                                     </div>
                                     <div class="flex flex-col items-center justify-center bg-white border border-[#D92D20] rounded-lg px-2 py-1.5 min-w-[90px] shadow-sm">
@@ -927,7 +945,7 @@
                             </div>
                         `;
                     } else if (diffDays === 0) {
-                        // Due Today (Orange/Brown Theme like Image 2)
+                        // Due Today (Orange/Brown Theme)
                         count++;
                         htmlItem = `
                             <div class="p-4 border-b border-amber-100 bg-[#FFFAEB]">
@@ -938,10 +956,10 @@
                                             <span class="text-[#B54708] font-bold text-base">ครบกำหนดคืนวันนี้</span>
                                         </div>
                                         <div class="text-slate-700 font-bold text-sm mb-0.5 flex items-center">
-                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${r.model} (${r.plate})
+                                            <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${escapeHTML(r.model)} (${escapeHTML(r.plate)})
                                         </div>
                                         <div class="text-slate-500 text-xs flex items-center">
-                                            <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${r.customer}
+                                            <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${escapeHTML(r.customer)}
                                         </div>
                                     </div>
                                     <div class="flex flex-col items-center justify-center bg-white border border-[#B54708] rounded-lg px-2 py-1.5 min-w-[90px] shadow-sm">
