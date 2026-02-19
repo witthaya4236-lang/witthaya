@@ -1009,7 +1009,26 @@
         function exportExcel() {
             if(!rentals.length) return Swal.fire('No Data', 'ไม่มีข้อมูลให้ Export', 'warning');
 
-            const ws_raw = XLSX.utils.json_to_sheet(rentals);
+            // แปลงข้อมูลเป็นภาษาไทยสำหรับ Excel
+            const thaiData = rentals.map(r => ({
+                'รุ่นรถ': r.model,
+                'ทะเบียน': r.plate,
+                'สีรถ': r.color,
+                'ลูกค้า': r.customer,
+                'เบอร์โทร': r.phone,
+                'หมวกกันน็อค': r.helmet,
+                'วันรับรถ': r.start_date, // หรือใช้ formatDate(r.start_date) ถ้าต้องการ format แบบไทย
+                'วันคืนรถ': r.end_date,
+                'จำนวนวัน': r.duration,
+                'ค่าเช่า': r.rental_fee,
+                'มัดจำ': r.deposit,
+                'ยอดรวมสุทธิ': r.total,
+                'สถานะ': r.status,
+                'หมายเหตุ': r.remark || '-',
+                'วันที่บันทึก': r.created_at ? new Date(r.created_at).toLocaleString('th-TH') : '-'
+            }));
+
+            const ws_raw = XLSX.utils.json_to_sheet(thaiData);
             const weeklyData = {};
 
             rentals.forEach(r => {
