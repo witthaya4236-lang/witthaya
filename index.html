@@ -278,29 +278,30 @@
     <div id="notificationOverlay" class="hidden fixed inset-0 z-[1999] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleNotifications()"></div>
 
     <!-- Notification Dropdown (Floating Card) -->
-    <div id="notificationDropdown" class="hidden fixed top-20 left-4 right-4 z-[2000] max-h-[80vh] bg-white flex flex-col rounded-2xl shadow-2xl border border-gray-100 md:fixed md:inset-auto md:top-20 md:right-4 md:w-[400px] md:h-auto md:max-h-[600px] transform origin-top-right transition-all">
+    <!-- ปรับขนาดเล็กลงมาก: mobile width 320px (95%) centered, desktop width 300px -->
+    <div id="notificationDropdown" class="hidden fixed top-16 left-1/2 -translate-x-1/2 w-[95%] max-w-[320px] z-[2000] max-h-[60vh] bg-white flex flex-col rounded-2xl shadow-2xl border border-gray-100 md:left-auto md:translate-x-0 md:right-4 md:top-16 md:w-[300px] md:h-auto md:max-h-[500px] transition-all">
         
         <!-- Header -->
-        <div class="px-6 py-5 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm flex-shrink-0 rounded-t-2xl">
+        <div class="px-4 py-3 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm flex-shrink-0 rounded-t-2xl">
             <div>
-                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <i class="fa-solid fa-bell text-indigo-500"></i> แจ้งเตือนคืนรถ
                 </h3>
-                <div class="text-xs text-gray-400 mt-0.5" id="notifyDate"></div>
+                <div class="text-[10px] text-gray-400 mt-0.5" id="notifyDate"></div>
             </div>
-            <button onclick="toggleNotifications()" class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-red-500 transition shadow-sm">
-                <i class="fa-solid fa-xmark text-lg"></i>
+            <button onclick="toggleNotifications()" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-red-500 transition shadow-sm">
+                <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
 
         <!-- List Container -->
-        <div id="notificationList" class="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-3 md:max-h-[500px] rounded-b-2xl">
+        <div id="notificationList" class="flex-1 overflow-y-auto bg-slate-50 p-3 space-y-2.5 md:max-h-[500px] rounded-b-2xl">
             <!-- Dynamic Content Here -->
-            <div class="flex flex-col items-center justify-center py-12 text-slate-300">
-                <div class="bg-white p-4 rounded-full mb-3 shadow-sm border border-slate-100">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-200"></i>
+            <div class="flex flex-col items-center justify-center py-10 text-slate-300">
+                <div class="bg-white p-3 rounded-full mb-2 shadow-sm border border-slate-100">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-200"></i>
                 </div>
-                <span class="text-sm font-medium">กำลังโหลดข้อมูล...</span>
+                <span class="text-xs font-medium">กำลังโหลด...</span>
             </div>
         </div>
     </div>
@@ -919,52 +920,52 @@
                     const displayDate = formatDate(r.end_date);
 
                     if (diffDays < 0) {
-                        // Overdue (Red Theme)
+                        // Overdue (Red Theme) - Adjusted sizes for smaller card
                         count++;
                         const overdueDays = Math.abs(diffDays);
                         htmlItem = `
-                            <div class="p-4 border-b border-red-100 bg-[#FFF5F5]">
+                            <div class="p-3 border-b border-red-100 bg-[#FFF5F5]">
                                 <div class="flex justify-between items-center">
                                     <div class="flex-1 pr-2">
                                         <div class="flex items-center gap-2 mb-1.5">
-                                            <i class="fa-solid fa-circle-exclamation text-[#D92D20] text-xl"></i> 
-                                            <span class="text-[#D92D20] font-bold text-base">เกินกำหนด ${overdueDays} วัน</span>
+                                            <i class="fa-solid fa-circle-exclamation text-[#D92D20] text-lg"></i> 
+                                            <span class="text-[#D92D20] font-bold text-sm">เกินกำหนด ${overdueDays} วัน</span>
                                         </div>
-                                        <div class="text-slate-700 font-bold text-sm mb-0.5 flex items-center">
+                                        <div class="text-slate-700 font-bold text-xs mb-0.5 flex items-center">
                                             <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${escapeHTML(r.model)} (${escapeHTML(r.plate)})
                                         </div>
-                                        <div class="text-slate-500 text-xs flex items-center">
+                                        <div class="text-slate-500 text-[10px] flex items-center">
                                             <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${escapeHTML(r.customer)}
                                         </div>
                                     </div>
-                                    <div class="flex flex-col items-center justify-center bg-white border border-[#D92D20] rounded-lg px-2 py-1.5 min-w-[90px] shadow-sm">
+                                    <div class="flex flex-col items-center justify-center bg-white border border-[#D92D20] rounded-lg px-2 py-1 min-w-[80px] shadow-sm">
                                         <span class="text-[10px] text-[#D92D20] font-medium mb-0.5">กำหนดคืน</span>
-                                        <span class="text-[#D92D20] font-bold text-sm">${displayDate}</span>
+                                        <span class="text-[#D92D20] font-bold text-xs">${displayDate}</span>
                                     </div>
                                 </div>
                             </div>
                         `;
                     } else if (diffDays === 0) {
-                        // Due Today (Orange/Brown Theme)
+                        // Due Today (Orange/Brown Theme) - Adjusted sizes for smaller card
                         count++;
                         htmlItem = `
-                            <div class="p-4 border-b border-amber-100 bg-[#FFFAEB]">
+                            <div class="p-3 border-b border-amber-100 bg-[#FFFAEB]">
                                 <div class="flex justify-between items-center">
                                     <div class="flex-1 pr-2">
                                         <div class="flex items-center gap-2 mb-1.5">
-                                            <i class="fa-solid fa-bell text-[#B54708] text-xl"></i> 
-                                            <span class="text-[#B54708] font-bold text-base">ครบกำหนดคืนวันนี้</span>
+                                            <i class="fa-solid fa-bell text-[#B54708] text-lg"></i> 
+                                            <span class="text-[#B54708] font-bold text-sm">ครบกำหนดคืนวันนี้</span>
                                         </div>
-                                        <div class="text-slate-700 font-bold text-sm mb-0.5 flex items-center">
+                                        <div class="text-slate-700 font-bold text-xs mb-0.5 flex items-center">
                                             <i class="fa-solid fa-motorcycle text-slate-400 mr-2 text-xs"></i> ${escapeHTML(r.model)} (${escapeHTML(r.plate)})
                                         </div>
-                                        <div class="text-slate-500 text-xs flex items-center">
+                                        <div class="text-slate-500 text-[10px] flex items-center">
                                             <i class="fa-solid fa-user text-slate-400 mr-2 text-[10px]"></i> ลูกค้า: ${escapeHTML(r.customer)}
                                         </div>
                                     </div>
-                                    <div class="flex flex-col items-center justify-center bg-white border border-[#B54708] rounded-lg px-2 py-1.5 min-w-[90px] shadow-sm">
+                                    <div class="flex flex-col items-center justify-center bg-white border border-[#B54708] rounded-lg px-2 py-1 min-w-[80px] shadow-sm">
                                         <span class="text-[10px] text-[#B54708] font-medium mb-0.5">กำหนดคืน</span>
-                                        <span class="text-[#B54708] font-bold text-sm">${displayDate}</span>
+                                        <span class="text-[#B54708] font-bold text-xs">${displayDate}</span>
                                     </div>
                                 </div>
                             </div>
@@ -987,7 +988,7 @@
                 badge.classList.add('hidden');
                 ping.classList.add('hidden');
                 list.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-16 text-slate-300">
+                    <div class="flex flex-col items-center justify-center py-12 text-slate-300">
                         <div class="bg-slate-50 p-6 rounded-full mb-4 shadow-sm">
                             <i class="fa-regular fa-calendar-check text-4xl text-slate-300"></i>
                         </div>
